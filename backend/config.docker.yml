@@ -1,0 +1,11 @@
+chroma:
+  host: chroma
+  port: 8000
+  collection_name: gcas_azure_guide_openai
+  embeddings_model: text-embedding-3-small
+
+llm:
+  model: "gpt-4.1-mini"
+  max_tokens: 4096
+  temperature: 1
+  top_p: 1

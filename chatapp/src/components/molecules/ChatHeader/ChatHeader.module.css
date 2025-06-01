@@ -1,0 +1,21 @@
+.chatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 16px;
+  min-height: 56px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #fff;
+}
+
+.logo {
+  font-size: 1.2rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: #333;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+} 
