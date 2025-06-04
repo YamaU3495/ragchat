@@ -143,6 +143,7 @@ const ChatPage: React.FC = () => {
         const updatedSessions = [...sessions, newSession];
         setSessions(updatedSessions);
         setCookie('sessions', JSON.stringify(updatedSessions));
+        setActiveSessionId(data.session_id);
       }
 
       setInputValue('');

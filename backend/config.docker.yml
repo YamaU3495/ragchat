@@ -9,3 +9,8 @@ llm:
   max_tokens: 4096
   temperature: 1
   top_p: 1
+
+mongodb:
+  uri: "mongodb://localhost:27017"
+  db_name: "chatdb"
+  collection_name: "messages"

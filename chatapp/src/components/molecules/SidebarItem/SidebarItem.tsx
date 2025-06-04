@@ -1,7 +1,7 @@
 import React from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import styles from './SidebarItem.module.css';
-import Button from '../../atoms/Button';
+import { IconButton } from '@mui/material';
 
 export type SidebarItemProps = {
   label: string;
@@ -24,16 +24,16 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     >
       <span className={styles.label}>{label}</span>
       {onDelete && (
-        <Button
-          className={styles.deleteButton}
+        <IconButton 
+          aria-label="edit"
           onClick={(e) => {
             e.stopPropagation();
             onDelete();
           }}
-          title="削除"
+          size="small"
         >
-          <DeleteIcon fontSize="small" />
-        </Button>
+          <DeleteIcon style={{ color: '#fff' }}  />
+        </IconButton >
       )}
     </div>
   );

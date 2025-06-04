@@ -182,3 +182,13 @@ chroma_data/
 
 embedding/output/
 
+mongo_data/
+
+*.pem
+*.csr
+*.key
+*.crt
+*.pfx
+*.p12
+*.pfx
+*.p12

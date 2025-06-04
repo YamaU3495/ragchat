@@ -15,6 +15,7 @@ coloredlogs==15.0.1
 dependency-injector==4.47.1
 Deprecated==1.2.18
 distro==1.9.0
+dnspython==2.7.0
 durationpy==0.10
 fastapi==0.115.9
 filelock==3.18.0
@@ -70,6 +71,7 @@ pyasn1_modules==0.4.2
 pydantic==2.11.5
 pydantic_core==2.33.2
 Pygments==2.19.1
+pymongo==4.13.0
 PyPika==0.48.9
 pyproject_hooks==1.2.0
 pyreadline3==3.5.4

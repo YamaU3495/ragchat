@@ -1,16 +1,14 @@
-import React from 'react';
+import * as React from 'react';
+import { Button as MuiButton, ButtonProps as MuiButtonProps } from '@mui/material';
 
-type ButtonProps = React.TextareaHTMLAttributes<HTMLButtonElement> & {
+type ButtonProps = MuiButtonProps & {
   children: React.ReactNode;
-  onClick?: (e?: React.UIEvent) => void;
-  type?: 'button' | 'submit' | 'reset';
-  className?: string;
 };
 
-const Button: React.FC<ButtonProps> = ({ children, onClick, type = 'button', className, style }) => (
-  <button type={type} onClick={onClick} className={className} style={style}>
+const Button: React.FC<ButtonProps> = ({ children, ...props }) => (
+  <MuiButton {...props}>
     {children}
-  </button>
+  </MuiButton>
 );
 
 export default Button; 

@@ -1,11 +1,11 @@
 # パラメータの設定
-$resourceGroupName = "openai-rg"
-$location = "japaneast"
-$aiServiceName = "openai-service"
-$customDomainName = "openai-service-domdom"
-$modelDeploymentName = "gpt4-deployment"
-$model = "gpt-4.1-mini"
-$modelVersion = "2025-04-14"
+$resourceGroupName = ""
+$location = ""
+$aiServiceName = ""
+$customDomainName = ""
+$modelDeploymentName = ""
+$model = ""
+$modelVersion = ""
 
 # リソースグループの作成（存在しない場合）
 $rgExists = az group exists --name $resourceGroupName

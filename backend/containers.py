@@ -2,7 +2,6 @@ import chromadb
 from dependency_injector import containers, providers
 from langchain_chroma import Chroma
 import os
-from db.factory import DatabaseFactory
 from db.chat.factory import ChatRepositoryFactory
 from dotenv import load_dotenv
 from langchain_openai import AzureOpenAIEmbeddings,AzureChatOpenAI
@@ -13,7 +12,6 @@ class Container(containers.DeclarativeContainer):
 
     # 環境変数から設定ファイルを選択
     config_file = os.getenv("CONFIG_FILE", "config.yml")
-
     # config_fileの存在チェック
     if not os.path.exists(config_file):
         raise FileNotFoundError(f"設定ファイルが見つかりません: {config_file}")
@@ -54,18 +52,10 @@ class Container(containers.DeclarativeContainer):
         client=client
     )
 
-    # 会話履歴用のデータベース（Factory Pattern）
-    database = providers.Singleton(
-        DatabaseFactory.create_database,
-        db_type=os.getenv("DB_TYPE", "inmemory"),
-        db_path=os.getenv("DB_PATH", ":memory:")
-    )
-
     # チャット履歴用のリポジトリ（Factory Pattern）
     chat_repository = providers.Singleton(
         ChatRepositoryFactory.create_database,
-        db_type=os.getenv("DB_TYPE", "inmemory"),
-        db_path=os.getenv("DB_PATH", ":memory:")
+        db_type=os.getenv("DB_TYPE", "inmemory")
     )
 
     # LLMプロバイダー

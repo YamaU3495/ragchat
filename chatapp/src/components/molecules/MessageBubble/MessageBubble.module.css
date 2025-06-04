@@ -18,12 +18,13 @@
   color: #222;
   position: relative;
   word-break: break-word;
-  min-width: 300px;
+  min-width: 400px;
 }
 .messageBubbleUser {
-  background: #dcf2ff;
+  background: #fff;
   color: #222;
   border-bottom-right-radius: 6px;
+  margin-left: auto;
 }
 .messageBubbleAi {
   background: #fff;
@@ -38,7 +39,6 @@
 }
 .editContainer {
   display: block;
-  margin-bottom: 8px;
 }
 .editTextarea {
   width: 100%;

@@ -3,6 +3,7 @@ import TextArea from '../../atoms/TextArea';
 import Button from '../../atoms/Button';
 import styles from './ChatInput.module.css';
 import SendIcon from '@mui/icons-material/Send';
+import { IconButton } from '@mui/material';
 
 type ChatInputProps = {
   value: string;
@@ -55,14 +56,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ value, onChange, onSend, classNam
         style={{ resize: 'none', overflow: 'hidden' }}
         autoResize
       />
-      <Button
+      <IconButton
         onClick={handleSendAndReset}
-        className={styles.chatSendBtn}
         type="button"
         disabled={loading}
       >
         <SendIcon style={{ fontSize: 22 }} />
-      </Button>
+      </IconButton>
     </div>
   );
 };

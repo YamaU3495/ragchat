@@ -4,6 +4,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import EditIcon from '@mui/icons-material/Edit';
 import Button from '../../atoms/Button';
 import styles from './Sidebar.module.css';
+import { IconButton } from '@mui/material';
 
 export type SidebarItemType = {
   label: string;
@@ -24,9 +25,9 @@ const Sidebar: React.FC<SidebarProps> = ({ items, className, onNewChat }) => {
   if (!open) {
     return (
       <div className={styles.sidebarHeader} style={{ background: '#181818', height: 48, display: 'flex', alignItems: 'center', padding: '8px 12px' }}>
-        <Button onClick={() => setOpen(true)} className={styles.sidebarHeaderBtn} title="サイドバー開閉">
-          <MenuIcon style={{ fontSize: 28, color: '#fff' }} />
-        </Button>
+        <IconButton onClick={() => setOpen(true)} className={styles.sidebarHeaderBtn} title="サイドバー開閉" size="small">
+          <MenuIcon style={{ color: '#fff' }} />
+        </IconButton>
       </div>
     );
   }
@@ -34,13 +35,13 @@ const Sidebar: React.FC<SidebarProps> = ({ items, className, onNewChat }) => {
   return (
     <aside className={`${styles.sidebar}${className ? ' ' + className : ''}`}>
       <div className={styles.sidebarHeader}>
-        <Button onClick={() => setOpen(false)} className={styles.sidebarHeaderBtn} title="サイドバー開閉">
-          <MenuIcon style={{ fontSize: 28, color: '#fff' }} />
-        </Button>
+        <IconButton onClick={() => setOpen(false)} className={styles.sidebarHeaderBtn} title="サイドバー開閉" size="small">
+          <MenuIcon style={{ color: '#fff' }} />
+        </IconButton>
         <div style={{ flex: 1 }} />
-        <Button onClick={onNewChat} className={styles.sidebarHeaderBtn} title="新しいチャット">
-          <EditIcon style={{ fontSize: 28, color: '#fff' }} />
-        </Button>
+        <IconButton onClick={onNewChat} className={styles.sidebarHeaderBtn} title="新しいチャット" size="small">
+          <EditIcon style={{ color: '#fff' }} />
+        </IconButton>
       </div>
       <div className={styles.sidebarItems}>
         {items.map((item, idx) => (
