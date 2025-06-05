@@ -8,8 +8,8 @@ class InMemoryChatRepo(IChatRepo):
         self.logger = getLogger("uvicorn.app")
         self._chat_messages: Dict[str, List[ChatMessage]] = {}
 
-    async def save_chat_message(self, session_id: str, message: ChatMessage) -> None:
-        """チャットメッセージを保存する"""
+    async def save_chat_message(self, session_id: str, message: ChatMessage) -> ChatMessage:
+        """チャットメッセージを保存し、no割り当て済みのChatMessageを返す"""
         self.logger.info(f"Saving chat message for session {session_id}")
         if session_id not in self._chat_messages:
             self._chat_messages[session_id] = []
@@ -19,6 +19,7 @@ class InMemoryChatRepo(IChatRepo):
         self._chat_messages[session_id].append(message_with_no)
         self.logger.info(f"Saved chat message for session {session_id}")
         self.logger.info(f"Chat messages count: {len(self._chat_messages[session_id])}")
+        return message_with_no
 
     async def get_chat_messages(self, session_id: str) -> List[ChatMessage]:
         """セッションIDに紐づくチャットメッセージを取得する"""

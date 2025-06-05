@@ -17,6 +17,7 @@ type ChatTemplateProps = {
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onSend: () => void;
   onEdit?: (index: number, newMessage: string) => void;
+  onDeleteAndSend?: (index: number, newMessage: string) => void;
   onNewChat?: () => void;
   loading?: boolean;
   error?: string;
@@ -30,6 +31,7 @@ const ChatTemplate: React.FC<ChatTemplateProps> = ({
   onInputChange, 
   onSend, 
   onEdit, 
+  onDeleteAndSend,
   onNewChat, 
   loading,
   error,
@@ -51,7 +53,7 @@ const ChatTemplate: React.FC<ChatTemplateProps> = ({
       <Sidebar items={sidebarItems} onNewChat={onNewChat} />
       <div className={styles.chatMain}>
         <ChatHeader className={styles.fullWidth} />
-        <ChatArea messages={messages} className={styles.fullWidth} onEdit={onEdit} loading={loading}/>
+        <ChatArea messages={messages} className={styles.fullWidth} onEdit={onEdit} onDeleteAndSend={onDeleteAndSend} loading={loading}/>
         <ChatInput value={inputValue} onChange={onInputChange} onSend={onSend} className={styles.fullWidth} loading={loading} />
       </div>
       <Snackbar 

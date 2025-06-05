@@ -14,8 +14,8 @@ class MongoChatRepo(IChatRepo):
         self.db = self.client[db_name]
         self.collection = self.db[collection_name]
 
-    async def save_chat_message(self, session_id: str, message: ChatMessage) -> None:
-        """チャットメッセージを保存する"""
+    async def save_chat_message(self, session_id: str, message: ChatMessage) -> ChatMessage:
+        """チャットメッセージを保存し、no割り当て済みのChatMessageを返す"""
         self.logger.info(f"Saving chat message for session {session_id}")
         # noを自動付与
         next_no = self.collection.count_documents({"session_id": session_id}) + 1
@@ -28,6 +28,7 @@ class MongoChatRepo(IChatRepo):
         count = self.collection.count_documents({"session_id": session_id})
         self.logger.info(f"Saved chat message for session {session_id}")
         self.logger.info(f"Chat messages count: {count}")
+        return ChatMessage(no=next_no, role=message.role, content=message.content)
 
     async def get_chat_messages(self, session_id: str) -> List[ChatMessage]:
         """セッションIDに紐づくチャットメッセージを取得する"""

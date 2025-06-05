@@ -22,10 +22,11 @@ type MessageBubbleProps = {
   time?: string;
   className?: string;
   onEdit?: (index: number, newMessage: string) => void;
+  onDeleteAndSend?: (index: number, newMessage: string) => void;
   index?: number;
 };
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isUser = false, avatarSrc, userName, time, className, onEdit, index }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isUser = false, avatarSrc, userName, time, className, onEdit, onDeleteAndSend, index }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(message);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -44,7 +45,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isUser = false, 
   };
 
   const handleSave = () => {
-    if (onEdit && typeof index === 'number') {
+    if (onDeleteAndSend && typeof index === 'number') {
+      onDeleteAndSend(index, editValue);
+    } else if (onEdit && typeof index === 'number') {
       onEdit(index, editValue);
     }
     setIsEditing(false);

@@ -60,13 +60,14 @@ const ChatPage: React.FC = () => {
         return;
       }
 
-      const formattedMessages = data.messages.map((msg: any) => {
+      const formattedMessages: MessageType[] = data.messages.map((msg: any) => {
         if (!msg.content || typeof msg.content !== 'string') {
           throw new Error('メッセージの形式が不正です');
         }
         return {
           message: msg.content,
-          isUser: msg.role === 'user'
+          isUser: msg.role === 'user',
+          no: msg.no,
         };
       });
 
@@ -96,6 +97,15 @@ const ChatPage: React.FC = () => {
 
     setLoading(true);
     try {
+      
+      const newMessage: MessageType = {
+        message: inputValue,
+        isUser: true,
+        no: undefined,
+      };
+      setMessages([...messages, newMessage]);
+      setInputValue('');
+
       const response = await fetch(`${getApiBaseUrl()}/api/chat`, {
         method: 'POST',
         headers: {
@@ -124,12 +134,17 @@ const ChatPage: React.FC = () => {
 
       const data = await response.json();
       
-      // 新しいメッセージを追加
-      const newMessages = [
-        ...messages,
-        { message: inputValue, isUser: true },
-        { message: data.response, isUser: false }
-      ];
+      const userMessage: MessageType = {
+        message: inputValue,
+        isUser: true,
+        no: data.request_no,
+      };
+      const aiMessage: MessageType = {
+        message: data.content,
+        isUser: false,
+        no: data.no,
+      };
+      const newMessages = [...messages, userMessage, aiMessage];
       setMessages(newMessages);
 
       // 新しいセッションを作成
@@ -146,7 +161,9 @@ const ChatPage: React.FC = () => {
         setActiveSessionId(data.session_id);
       }
 
-      setInputValue('');
+      if (activeSessionId) {
+        fetchConversationHistory(activeSessionId);
+      }
     } catch (error) {
       console.error('エラーが発生しました:', error);
       let errorMessage = 'エラーが発生しました';
@@ -217,6 +234,59 @@ const ChatPage: React.FC = () => {
     }
   };
 
+  // Add a new handler for delete-and-send
+  const handleDeleteAndSend = async (index: number, newMessage: string) => {
+    if (!activeSessionId) return;
+    setLoading(true);
+    try {
+      // Delete messages after the edited message (index)
+      var sortedMessaged = messages.sort((a, b) => {
+        if (a.no == null) return 1;
+        if (b.no == null) return -1;
+        return a.no - b.no;
+      });
+      const startIndex=sortedMessaged.findIndex(msg=>msg.no==sortedMessaged[index].no);
+      // APIに送信する前にメッセージを削除する
+      for (let i = startIndex; i < messages.length; i++) {
+        sortedMessaged = sortedMessaged.filter(msg=>msg.no!=messages[i].no);
+      }
+      setMessages([...sortedMessaged, {message:newMessage,isUser:true,no: messages[index].no}]);
+
+      // メッセージを削除する
+      for (let i = startIndex; i < messages.length; i++) {
+        const deleteRes = await fetch(`${getApiBaseUrl()}/api/chat/message/${activeSessionId}/${messages[i].no}`, {
+          method: 'DELETE',
+        });
+        if (!deleteRes.ok) {
+          throw new Error('メッセージの削除に失敗しました');
+        }
+      }
+      // Send the new message
+      const sendRes = await fetch(`${getApiBaseUrl()}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: newMessage,
+          session_id: activeSessionId,
+        }),
+      });
+      if (!sendRes.ok) {
+        throw new Error('新しいメッセージの送信に失敗しました');
+      }
+      const data = await sendRes.json();
+      // Fetch updated history again to include the new message
+      await fetchConversationHistory(activeSessionId);
+      setInputValue('');
+    } catch (error) {
+      console.error('削除と送信でエラー:', error);
+      setErrorMessage(error instanceof Error ? error.message : '削除と送信でエラーが発生しました');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // サイドバーアイテムを生成
   const sidebarItems: SidebarItemType[] = sessions.map(session => ({
     label: session.label,
@@ -233,6 +303,7 @@ const ChatPage: React.FC = () => {
       onInputChange={handleInputChange}
       onSend={handleSend}
       onEdit={handleEditMessage}
+      onDeleteAndSend={handleDeleteAndSend}
       onNewChat={handleNewChat}
       loading={loading}
       error={errorMessage}

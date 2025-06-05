@@ -9,20 +9,22 @@ export type MessageType = {
   avatarSrc?: string;
   userName?: string;
   time?: string;
+  no?: number;
 };
 
 type ChatAreaProps = {
   messages: MessageType[];
   className?: string;
   onEdit?: (index: number, newMessage: string) => void;
+  onDeleteAndSend?: (index: number, newMessage: string) => void;
   loading?: boolean;
 };
 
-const ChatArea: React.FC<ChatAreaProps> = ({ messages, className, onEdit, loading }) => (
+const ChatArea: React.FC<ChatAreaProps> = ({ messages, className, onEdit, onDeleteAndSend, loading }) => (
   <div className={`${styles.chatArea}${className ? ' ' + className : ''}`}> 
     <div className={styles.chatAreaInner}>
       {messages.map((msg, idx) => (
-        <MessageBubble key={idx} {...msg} index={idx} onEdit={onEdit} />
+        <MessageBubble key={idx} {...msg} index={idx} onEdit={onEdit} onDeleteAndSend={onDeleteAndSend} />
       ))}
       {loading && (
         <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>

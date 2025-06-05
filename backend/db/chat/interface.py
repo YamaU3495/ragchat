@@ -4,8 +4,8 @@ from .models import ChatMessage
 
 class IChatRepo(ABC):
     @abstractmethod
-    async def save_chat_message(self, session_id: str, message: ChatMessage) -> None:
-        """Save a chat message for a given session"""
+    async def save_chat_message(self, session_id: str, message: ChatMessage) -> ChatMessage:
+        """Save a chat message for a given session and return the message with assigned no"""
         pass
 
     @abstractmethod

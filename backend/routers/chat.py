@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from chat import ChatManager
 from containers import Container
 import uuid
-from typing import List, Dict
+from typing import List
 from db.chat.models import ChatMessage
 
 router = APIRouter()
@@ -15,13 +15,9 @@ class Message(BaseModel):
     content: str
     session_id: str | None = None
 
-class ChatResponse(BaseModel):
-    response: str
+class ChatResponse(ChatMessage):
     session_id: str
-
-class ChatMessage(BaseModel):
-    role: str
-    content: str
+    request_no: int
 
 class ChatHistoryResponse(BaseModel):
     messages: List[ChatMessage]
@@ -37,17 +33,17 @@ async def chat(
     If session_id is not provided, a new one will be generated.
     """
     try:
-        # Generate new session_id if not provided
         session_id = message.session_id or str(uuid.uuid4())
-        
-        response = await chat_manager.get_response(
+        last_msgs = await chat_manager.get_response(
             message=message.content,
             session_id=session_id
         )
-        
         return ChatResponse(
-            response=response,
-            session_id=session_id
+            session_id=session_id,
+            request_no=last_msgs[0].no,
+            no=last_msgs[-1].no,
+            role=last_msgs[-1].role,
+            content=last_msgs[-1].content,
         )
     except Exception as e:
         raise HTTPException(
