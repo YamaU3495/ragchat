@@ -10,6 +10,7 @@ from containers import Container
 from typing import List, Dict
 from langsmith import traceable
 from logging import getLogger
+from db.chat.models import ChatMessage
 
 class DatabaseHistory(BaseChatMessageHistory):
     def __init__(self, messages: List[BaseMessage] = None):
@@ -80,10 +81,10 @@ class ChatManager:
         db_messages = await self.chat_repository.get_chat_messages(session_id)
         messages = []
         for msg in db_messages:
-            if msg["role"] == "user":
-                messages.append(HumanMessage(content=msg["content"]))
-            elif msg["role"] == "assistant":
-                messages.append(AIMessage(content=msg["content"]))
+            if msg.role == "user":
+                messages.append(HumanMessage(content=msg.content))
+            elif msg.role == "assistant":
+                messages.append(AIMessage(content=msg.content))
         return messages
 
     async def _save_messages(self, session_id: str, messages: List[BaseMessage]) -> None:
@@ -92,9 +93,9 @@ class ChatManager:
         self.logger.info(f"Messages count: {len(messages)}")
         for message in messages:
             if isinstance(message, HumanMessage):
-                await self.chat_repository.save_chat_message(session_id, "user", message.content)
+                await self.chat_repository.save_chat_message(session_id, ChatMessage(no=0, role="user", content=message.content))
             elif isinstance(message, AIMessage):
-                await self.chat_repository.save_chat_message(session_id, "assistant", message.content)
+                await self.chat_repository.save_chat_message(session_id, ChatMessage(no=0, role="assistant", content=message.content))
 
     @traceable
     async def get_response(self, message: str, session_id: str) -> str:

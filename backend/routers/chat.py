@@ -4,6 +4,7 @@ from chat import ChatManager
 from containers import Container
 import uuid
 from typing import List, Dict
+from db.chat.models import ChatMessage
 
 router = APIRouter()
 
@@ -76,9 +77,27 @@ async def get_chat_history(
     try:
         messages = await chat_manager.chat_repository.get_chat_messages(session_id)
         return ChatHistoryResponse(
-            messages=[ChatMessage(**msg) for msg in messages],
+            messages=messages,
             session_id=session_id
         )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@router.delete("/chat/message/{session_id}/{no}")
+async def delete_chat_message(
+    session_id: str,
+    no: int,
+    chat_manager: ChatManager = Depends(get_chat_manager)
+):
+    """
+    指定したnoのメッセージを削除する
+    """
+    try:
+        await chat_manager.chat_repository.delete_chat_message_by_no(session_id, no)
+        return {"message": f"Message no={no} deleted", "session_id": session_id}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
