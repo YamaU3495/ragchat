@@ -96,14 +96,14 @@ const ChatPage: React.FC = () => {
     if (!inputValue.trim()) return;
 
     setLoading(true);
+    const originalMessages = [...messages]; // 現在のメッセージを保存
     try {
-      
       const newMessage: MessageType = {
         message: inputValue,
         isUser: true,
-        no: undefined,
+        no: messages.length+1,
       };
-      setMessages([...messages, newMessage]);
+      setMessages(prevMessages => [...prevMessages, newMessage]);
       setInputValue('');
 
       const response = await fetch(`${getApiBaseUrl()}/api/chat`, {
@@ -134,18 +134,12 @@ const ChatPage: React.FC = () => {
 
       const data = await response.json();
       
-      const userMessage: MessageType = {
-        message: inputValue,
-        isUser: true,
-        no: data.request_no,
-      };
       const aiMessage: MessageType = {
         message: data.content,
         isUser: false,
         no: data.no,
       };
-      const newMessages = [...messages, userMessage, aiMessage];
-      setMessages(newMessages);
+      setMessages(prevMessages => [...prevMessages, aiMessage]);
 
       // 新しいセッションを作成
       if (!activeSessionId) {
@@ -160,10 +154,6 @@ const ChatPage: React.FC = () => {
         setCookie('sessions', JSON.stringify(updatedSessions));
         setActiveSessionId(data.session_id);
       }
-
-      if (activeSessionId) {
-        fetchConversationHistory(activeSessionId);
-      }
     } catch (error) {
       console.error('エラーが発生しました:', error);
       let errorMessage = 'エラーが発生しました';
@@ -175,6 +165,7 @@ const ChatPage: React.FC = () => {
       }
       
       setErrorMessage(errorMessage);
+      setMessages(originalMessages); // エラー時に元のメッセージに戻す
     } finally {
       setLoading(false);
     }
