@@ -36,13 +36,11 @@ services:
       - mongo
 
   chroma:
-    image: chromadb/chroma:1.0.12 
-    ports:
-      - "8001:8000"
+    image: chromadb/chroma:1.0.12
     environment:
       - ANONYMIZED_TELEMETRY=False
     volumes:
-      - ./chroma_data:/chroma/chroma
+      - ./chroma_data:/data
 
   mongo:
     image: mongo:8.0.10

@@ -57,17 +57,6 @@ embeddings = AzureOpenAIEmbeddings(
     model=os.getenv("AZURE_EMBEDDING_MODEL")
 )
 
-
-# Define an 'add' tool.
-# This tool takes two integers 'a' and 'b' and returns their sum.
-@server.tool()
-def add(a: int, b: int) -> int:
-    """Add two numbers."""
-    logger.debug(f"Tool 'add' called with a={a}, b={b}")
-    result = a + b
-    logger.debug(f"Tool 'add' result: {result}")
-    return result
-
 @server.tool()
 def search(query: str) -> str:
     """

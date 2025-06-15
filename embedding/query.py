@@ -1,18 +1,15 @@
-from langchain_ollama import OllamaEmbeddings
-import chromadb
+from settings import get_embedding, get_chroma_client, get_collection
 import numpy as np
-from langchain_openai import OpenAIEmbeddings
-from chromadb.config import Settings
+import os
 
-
-client = chromadb.HttpClient(host='localhost', port=8000, settings=Settings(anonymized_telemetry=False))
-collection_name = "gcas_azure_guide_nomic-embed-text"
-collection = client.get_or_create_collection(collection_name, metadata={
-    "url": "https://guide.gcas.cloud.go.jp/azure/"
-})
+client = get_chroma_client()  # settings.pyのデフォルト（環境変数）を利用
+collection = get_collection(client)
 
 # コレクションの情報を表示
 print(f"Collection count: {collection.count()}")
+
+# 埋め込みモデルのインスタンスを作成
+embeddings = get_embedding()
 
 # 検索クエリの埋め込みを生成
 query = "ユーザー管理方法"

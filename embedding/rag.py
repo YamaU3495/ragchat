@@ -7,20 +7,8 @@ from langchain_core.runnables import RunnablePassthrough
 import chromadb
 from langsmith import traceable
 from langchain_openai import AzureOpenAIEmbeddings
-from dotenv import load_dotenv
-from chromadb.config import Settings
+from settings import get_embedding, get_chroma_client, get_collection
 
-
-# 環境変数の読み込み
-load_dotenv()
-
-# 環境変数の設定
-# Azure OpenAIの設定
-os.environ["AZURE_OPENAI_API_KEY"] = os.getenv("AZURE_OPENAI_API_KEY")
-os.environ["AZURE_OPENAI_ENDPOINT"] = os.getenv("AZURE_OPENAI_ENDPOINT")
-# Langsmith
-os.environ["LANGSMITH_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
-os.environ["LANGSMITH_TRACING"] = "true"
 
 llm = AzureChatOpenAI(
     openai_api_version="2024-12-01-preview",
@@ -30,14 +18,6 @@ llm = AzureChatOpenAI(
     max_retries=2,
     streaming=False,
     openai_api_type="azure"
-)
-
-# 埋め込みモデルの設定
-embeddings = AzureOpenAIEmbeddings(
-    api_key = os.getenv("AZURE_OPENAI_API_KEY"),  
-    api_version = "2024-10-21",
-    azure_endpoint =os.getenv("AZURE_EMBEDDING_ENDPOINT"),
-    model="text-embedding-3-small"
 )
 
 # プロンプトテンプレートの設定
@@ -53,9 +33,8 @@ prompt = ChatPromptTemplate.from_template(template)
 
 @traceable
 def main():
-    collection_name = "gcas_azure_guide_openai"
-    client = chromadb.HttpClient(host='localhost', port=8000, settings=Settings(anonymized_telemetry=False))
-    db = Chroma(client=client, embedding_function=embeddings, collection_name=collection_name)
+    client = get_chroma_client()  # settings.pyのデフォルト（環境変数）を利用
+    db = Chroma(client=client, embedding_function=get_embedding(), collection_name=None)  # collection_nameもデフォルト
 
     hypothetical_prompt = ChatPromptTemplate.from_template('''\
 次の質問に回答する1文を作成してください｡
