@@ -8,6 +8,8 @@ import chromadb
 from langsmith import traceable
 from langchain_openai import AzureOpenAIEmbeddings
 from dotenv import load_dotenv
+from chromadb.config import Settings
+
 
 # 環境変数の読み込み
 load_dotenv()
@@ -52,7 +54,7 @@ prompt = ChatPromptTemplate.from_template(template)
 @traceable
 def main():
     collection_name = "gcas_azure_guide_openai"
-    client = chromadb.HttpClient(host='localhost', port=8000)
+    client = chromadb.HttpClient(host='localhost', port=8000, settings=Settings(anonymized_telemetry=False))
     db = Chroma(client=client, embedding_function=embeddings, collection_name=collection_name)
 
     hypothetical_prompt = ChatPromptTemplate.from_template('''\

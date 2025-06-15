@@ -13,6 +13,8 @@ from typing import List, Optional
 from datetime import datetime
 from langchain_openai import AzureOpenAIEmbeddings
 from dotenv import load_dotenv
+from chromadb.config import Settings
+
 
 class WebPageMetadata(BaseModel):
     url: str
@@ -166,7 +168,7 @@ def store_documents_in_chroma(documents, collection_name: str, embeddings_model:
         collection_name: Name of the ChromaDB collection
         embeddings_model: Type of embedding model to use ("openai" or "ollama")
     """
-    client = chromadb.HttpClient(host='localhost', port=8000)
+    client = chromadb.HttpClient(host='localhost', port=8000, settings=Settings(anonymized_telemetry=False))
     
     # Delete existing collection if it exists
     try:

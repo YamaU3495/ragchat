@@ -5,6 +5,7 @@ import os
 from db.chat.factory import ChatRepositoryFactory
 from dotenv import load_dotenv
 from langchain_openai import AzureOpenAIEmbeddings,AzureChatOpenAI
+from chromadb.config import Settings
 
 class Container(containers.DeclarativeContainer):
     # 環境変数の読み込み
@@ -38,11 +39,17 @@ class Container(containers.DeclarativeContainer):
         model="text-embedding-3-small"
     )
 
+    # ChromaDB Settings
+    chroma_settings = providers.Singleton(
+        Settings,
+        anonymized_telemetry=False,
+    )
     # ChromaDB client provider
     client = providers.Singleton(
         chromadb.HttpClient,
         host=config.chroma.host,
-        port=config.chroma.port
+        port=config.chroma.port,
+        settings=chroma_settings
     )
 
     chroma_db = providers.Singleton(

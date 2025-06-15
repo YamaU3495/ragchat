@@ -2,8 +2,10 @@ from langchain_ollama import OllamaEmbeddings
 import chromadb
 import numpy as np
 from langchain_openai import OpenAIEmbeddings
+from chromadb.config import Settings
 
-client = chromadb.HttpClient(host='localhost', port=8000)
+
+client = chromadb.HttpClient(host='localhost', port=8000, settings=Settings(anonymized_telemetry=False))
 collection_name = "gcas_azure_guide_nomic-embed-text"
 collection = client.get_or_create_collection(collection_name, metadata={
     "url": "https://guide.gcas.cloud.go.jp/azure/"

@@ -5,6 +5,7 @@ from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
 import chromadb
 from langchain_openai import AzureOpenAIEmbeddings
+from chromadb.config import Settings
 
 from config import Config
 
@@ -35,9 +36,13 @@ logger = logging.getLogger(server.name)
 
 # Load environment variables from .env file
 load_dotenv()
+chroma_settings = Settings(
+    anonymized_telemetry=False
+)
 client = chromadb.HttpClient(
     host=os.getenv("CHROMA_HOST", "localhost"),
-    port=os.getenv("CHROMA_PORT", "8001")
+    port=os.getenv("CHROMA_PORT", "8001"),
+    settings=chroma_settings
 )
 collection_name = os.getenv("CHROMA_COLLECTION_NAME", "gcas_azure_guide_openai")
 collection = client.get_or_create_collection(collection_name, metadata={
