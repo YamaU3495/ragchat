@@ -13,6 +13,9 @@ from typing import List, Optional
 from datetime import datetime
 from langchain_openai import AzureOpenAIEmbeddings
 from dotenv import load_dotenv
+from chromadb.config import Settings
+from settings import get_embedding, get_chroma_client, get_collection
+
 
 class WebPageMetadata(BaseModel):
     url: str
@@ -166,7 +169,7 @@ def store_documents_in_chroma(documents, collection_name: str, embeddings_model:
         collection_name: Name of the ChromaDB collection
         embeddings_model: Type of embedding model to use ("openai" or "ollama")
     """
-    client = chromadb.HttpClient(host='localhost', port=8000)
+    client = chromadb.HttpClient(host='localhost', port=8001, settings=Settings(anonymized_telemetry=False))
     
     # Delete existing collection if it exists
     try:
@@ -205,16 +208,10 @@ def store_documents_in_chroma(documents, collection_name: str, embeddings_model:
 
 if __name__ == "__main__":
     documents = asyncio.run(get_gcas_pages())  # デフォルトでファイルから読み込む
-    # .envファイルから環境変数を読み込む
-    load_dotenv()
+    # settings.pyで自動的に環境変数がセットされるため不要
 
     openai_collection = store_documents_in_chroma(
         documents,
-        collection_name="gcas_azure_guide_openai",
-        embeddings_model=AzureOpenAIEmbeddings(
-            api_key = os.getenv("AZURE_OPENAI_API_KEY"),  
-            api_version = "2024-10-21",
-            azure_endpoint =os.getenv("AZURE_EMBEDDING_ENDPOINT"),
-            model="text-embedding-3-small"
-        )
+        collection_name=os.getenv("CHROMADB_COLLECTION_NAME", "gcas_azure_guide_openai"),
+        embeddings_model=get_embedding()
     )

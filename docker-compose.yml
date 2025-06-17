@@ -36,11 +36,11 @@ services:
       - mongo
 
   chroma:
-    image: chromadb/chroma:1.0.12 
-    ports:
-      - "8001:8000"
+    image: chromadb/chroma:1.0.12
+    environment:
+      - ANONYMIZED_TELEMETRY=False
     volumes:
-      - ./chroma_data:/chroma/chroma
+      - ./chroma_data:/data
 
   mongo:
     image: mongo:8.0.10
@@ -54,3 +54,17 @@ services:
       ME_CONFIG_BASICAUTH: false
     volumes:
       - ./mongo_data:/data/db
+
+  mcp-server:
+    build:
+      context: ./mcp-server
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./mcp-server:/app
+    environment:
+      - CHROMA_COLLECTION_NAME=gcas_azure_guide_openai
+      - CHROMA_PORT=8000
+      - CHROMA_HOST=chroma
+    env_file:
+      - ./mcp-server/.env

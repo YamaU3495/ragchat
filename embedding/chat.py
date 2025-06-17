@@ -2,10 +2,7 @@ from langchain_openai import AzureChatOpenAI
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 import os
-from dotenv import load_dotenv
-
-# .envファイルから環境変数を読み込む
-load_dotenv()
+from settings import Settings
 
 def create_azure_chain():
     """
@@ -28,9 +25,9 @@ def create_azure_chain():
     os.environ["AZURE_OPENAI_ENDPOINT"] = endpoint
     
     llm = AzureChatOpenAI(
-        azure_deployment="gpt4-deployment",  # デプロイ名
-        openai_api_version="2024-12-01-preview",  # APIバージョン
-        temperature=0.5,
+        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt4-deployment"),
+        openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
+        temperature=float(os.getenv("AZURE_OPENAI_TEMPERATURE", "0.5")),
         max_tokens=None,
         timeout=None,
         max_retries=2,
