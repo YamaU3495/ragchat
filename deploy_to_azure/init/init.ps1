@@ -28,8 +28,8 @@ if ($rgExists -eq "false") {
 # Deploy the Bicep template
 Write-Host "Deploying Bicep template..."
 az deployment group create `
-    --template-file main.bicep `
-    --parameters resourceGroupName=$ResourceGroupName location=$Location
+    --resource-group $ResourceGroupName `
+    --template-file main.bicep
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Deployment failed"

@@ -6,16 +6,13 @@ param(
     [string]$Location,
     
     [Parameter(Mandatory=$true)]
-    [string]$DockerHubUsername,
-    
-    [Parameter(Mandatory=$true)]
-    [string]$DockerHubPassword,
-    
-    [Parameter(Mandatory=$true)]
     [string]$AdminUsername,
     
-    [Parameter(Mandatory=$true)]
-    [string]$AdminPassword,
+    [Parameter(Mandatory=$false)]
+    [string]$FrontendImage = "ragchat/ragchat-frontend:latest",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$BackendImage = "ragchat/ragchat-backend:latest",
     
     [Parameter(Mandatory=$false)]
     [int]$MaxRetries = 3,
@@ -37,32 +34,16 @@ if (-not $?) {
     exit 1
 }
 
-# Login to Docker Hub
-Write-Host "Logging in to Docker Hub..."
-docker login -u $DockerHubUsername -p $DockerHubPassword
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "Failed to login to Docker Hub"
-    exit 1
-}
-
-# Build and push frontend image
-Write-Host "Building and pushing frontend image..."
-$frontendImage = "${DockerHubUsername}/ragchat-frontend:latest"
-docker build -t $frontendImage ../frontend
-docker push $frontendImage
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "Failed to build and push frontend image"
-    exit 1
-}
-
-# Build and push backend image
-Write-Host "Building and pushing backend image..."
-$backendImage = "${DockerHubUsername}/ragchat-backend:latest"
-docker build -t $backendImage ../backend
-docker push $backendImage
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "Failed to build and push backend image"
-    exit 1
+# SSH鍵の作成（存在しない場合のみ）
+$SshKeyDir = "$HOME/.ssh"
+$SshPrivateKeyPath = "$SshKeyDir/id_ragchat_rsa"
+if (-not (Test-Path $SshPrivateKeyPath -PathType Leaf -ErrorAction SilentlyContinue)) {
+    Write-Host "SSH鍵が存在しません。OpenSSLで新規作成します..."
+    if (-not (Test-Path $SshKeyDir)) {
+        New-Item -ItemType Directory -Path $SshKeyDir | Out-Null
+    }
+    & ssh-keygen -t rsa -b 4096 -f $HOME/.ssh/id_ragchat_rsa
+    Write-Host "SSH鍵を作成しました: $SshPrivateKeyPath"
 }
 
 # Function to check for ongoing operations
@@ -85,36 +66,27 @@ function Wait-ForOngoingOperations {
 }
 
 # Deploy the Bicep template with retry logic
-$retryCount = 0
 $success = $false
 
-while (-not $success -and $retryCount -lt $MaxRetries) {
-    if ($retryCount -gt 0) {
-        Write-Host "Retry attempt $retryCount of $MaxRetries..."
-        Wait-ForOngoingOperations -Location $Location
-        Start-Sleep -Seconds $RetryDelaySeconds
-    }
 
-    Write-Host "Deploying Bicep template..."
-    az deployment group create `
-        --resource-group $ResourceGroupName `
-        --template-file main.bicep `
-        --parameters `
-            resourceGroupName=$ResourceGroupName `
-            location=$Location `
-            frontendImage=$frontendImage `
-            backendImage=$backendImage `
-            adminUsername=$AdminUsername `
-            adminPassword=$AdminPassword
 
-    if ($LASTEXITCODE -eq 0) {
-        $success = $true
-    } else {
-        $retryCount++
-        if ($retryCount -lt $MaxRetries) {
-            Write-Host "Deployment failed. Will retry in $RetryDelaySeconds seconds..."
-        }
-    }
+Write-Host "Deploying Bicep template..."
+az deployment group create `
+    --resource-group $ResourceGroupName `
+    --template-file main.bicep `
+    --parameters `
+        resourceGroupName=$ResourceGroupName `
+        location=$Location `
+        frontendImage=$frontendImage `
+        backendImage=$backendImage `
+        adminUsername=$AdminUsername `
+        sshPublicKey=$(cat "$($SshPrivateKeyPath).pub")
+
+if ($LASTEXITCODE -eq 0) {
+    $success = $true
+} else {
+    Write-Host "Deployment failed. Will retry in $RetryDelaySeconds seconds..."
+    exit 1
 }
 
 if (-not $success) {

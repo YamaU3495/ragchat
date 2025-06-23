@@ -8,13 +8,13 @@ param vnetName string = 'ragchat-vnet'
 param vnetAddressSpace string = '10.0.0.0/16'
 
 @description('The address prefix for the container apps subnet')
-param containerAppsSubnetPrefix string = '10.0.1.0/24'
+param containerAppsSubnetPrefix string = '10.0.0.0/23'
 
 @description('The address prefix for the MongoDB subnet')
-param mongoDBSubnetPrefix string = '10.0.2.0/24'
+param mongoDBSubnetPrefix string = '10.0.4.0/23'
 
 @description('The address prefix for the ChromaDB subnet')
-param chromaDBSubnetPrefix string = '10.0.3.0/24'
+param chromaDBSubnetPrefix string = '10.0.8.0/23'
 
 // Virtual Network
 resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
