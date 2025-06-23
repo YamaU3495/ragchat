@@ -1,0 +1,50 @@
+name: Update Azure Deployment Images
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Docker Images"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  update-deployment:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get workflow run inputs
+      id: workflow-inputs
+      run: |
+        # Get the version from the triggering workflow
+        VERSION="${{ github.event.workflow_run.inputs.version }}"
+        if [ -z "$VERSION" ]; then
+          VERSION="latest"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Update Azure deployment script
+      run: |
+        # Update the deploy.ps1 file with new image names
+        FRONTEND_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/ragchat-frontend:${{ steps.workflow-inputs.outputs.version }}"
+        BACKEND_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/ragchat-backend:${{ steps.workflow-inputs.outputs.version }}"
+        
+        # Update deploy.ps1 file
+        sed -i "s|frontendImage=.*|frontendImage=$FRONTEND_IMAGE|g" deploy_to_azure/deploy/deploy.ps1
+        sed -i "s|backendImage=.*|backendImage=$BACKEND_IMAGE|g" deploy_to_azure/deploy/deploy.ps1
+        
+        echo "Updated Azure deployment script with:"
+        echo "Frontend: $FRONTEND_IMAGE"
+        echo "Backend: $BACKEND_IMAGE"
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add deploy_to_azure/deploy/deploy.ps1
+        git commit -m "Update Docker images to ${{ steps.workflow-inputs.outputs.version }} [skip ci]" || exit 0
+        git push 
