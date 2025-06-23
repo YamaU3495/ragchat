@@ -1,9 +1,10 @@
 from azure.cosmos import CosmosClient
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
+from .interface import IChatRepo
 import os
 from typing import Optional, List, Dict, Any
 
-class CosmosDBClient:
+class CosmosDBClient(IChatRepo):
     def __init__(self):
         # 環境変数から接続情報を取得
         self.endpoint = os.getenv("COSMOS_ENDPOINT")
