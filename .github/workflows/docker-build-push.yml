@@ -42,7 +42,7 @@ jobs:
       with:
         context: ./chatapp
         file: ./chatapp/Dockerfile
-        push: inputs.push_to_registry
+        push: ${{ inputs.push_to_registry }}
         tags: |
           ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ inputs.version }}
           ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
@@ -55,7 +55,7 @@ jobs:
       with:
         context: ./backend
         file: ./backend/Dockerfile
-        push: inputs.push_to_registry
+        push: ${{ inputs.push_to_registry }}
         tags: |
           ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.BACKEND_IMAGE_NAME }}:${{ inputs.version }}
           ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.BACKEND_IMAGE_NAME }}:latest
