@@ -66,91 +66,91 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
   }
 }
 
-// // Frontend Container App
-// resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
-//   name: 'ragchat-frontend'
-//   location: location
-//   properties: {
-//     managedEnvironmentId: containerAppsEnv.id
-//     configuration: {
-//       ingress: {
-//         external: true
-//         targetPort: 3000
-//         transport: 'http'
-//         allowInsecure: false
-//       }
-//       secrets: []
-//       registries: []
-//     }
-//     template: {
-//       containers: [
-//         {
-//           name: 'frontend'
-//           image: frontendImage
-//           env: [
-//             {
-//               name: 'BACKEND_URL'
-//               value: 'http://ragchat-backend'
-//             }
-//           ]
-//           resources: {
-//             cpu: json('0.5')
-//             memory: '1Gi'
-//           }
-//         }
-//       ]
-//       scale: {
-//         minReplicas: 0
-//         maxReplicas: 1
-//       }
-//     }
-//   }
-// }
+// Frontend Container App
+resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
+  name: 'ragchat-frontend'
+  location: location
+  properties: {
+    managedEnvironmentId: containerAppsEnv.id
+    configuration: {
+      ingress: {
+        external: true
+        targetPort: 3000
+        transport: 'http'
+        allowInsecure: false
+      }
+      secrets: []
+      registries: []
+    }
+    template: {
+      containers: [
+        {
+          name: 'frontend'
+          image: frontendImage
+          env: [
+            {
+              name: 'BACKEND_URL'
+              value: 'http://ragchat-backend'
+            }
+          ]
+          resources: {
+            cpu: json('0.5')
+            memory: '1Gi'
+          }
+        }
+      ]
+      scale: {
+        minReplicas: 0
+        maxReplicas: 1
+      }
+    }
+  }
+}
 
-// // Backend Container App
-// resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
-//   name: 'ragchat-backend'
-//   location: location
-//   properties: {
-//     managedEnvironmentId: containerAppsEnv.id
-//     configuration: {
-//       ingress: {
-//         external: false
-//         targetPort: 8000
-//         transport: 'http'
-//         allowInsecure: false
-//       }
-//       secrets: []
-//       registries: []
-//     }
-//     template: {
-//       containers: [
-//         {
-//           name: 'backend'
-//           image: backendImage
-//           env: [
-//             {
-//               name: 'MONGODB_URI'
-//               value: 'mongodb://${mongodbVM.properties.networkProfile.networkInterfaces[0].properties.privateIPAddress}:27017'
-//             }
-//             {
-//               name: 'CHROMA_URL'
-//               value: 'http://${chromaVM.properties.networkProfile.networkInterfaces[0].properties.privateIPAddress}:8000'
-//             }
-//           ]
-//           resources: {
-//             cpu: json('0.5')
-//             memory: '1Gi'
-//           }
-//         }
-//       ]
-//       scale: {
-//         minReplicas: 0
-//         maxReplicas: 1
-//       }
-//     }
-//   }  
-// }
+// Backend Container App
+resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
+  name: 'ragchat-backend'
+  location: location
+  properties: {
+    managedEnvironmentId: containerAppsEnv.id
+    configuration: {
+      ingress: {
+        external: false
+        targetPort: 8000
+        transport: 'http'
+        allowInsecure: false
+      }
+      secrets: []
+      registries: []
+    }
+    template: {
+      containers: [
+        {
+          name: 'backend'
+          image: backendImage
+          env: [
+            {
+              name: 'MONGODB_URI'
+              value: 'mongodb://${mongodbVM.properties.networkProfile.networkInterfaces[0].properties.privateIPAddress}:27017'
+            }
+            {
+              name: 'CHROMA_URL'
+              value: 'http://${chromaVM.properties.networkProfile.networkInterfaces[0].properties.privateIPAddress}:8000'
+            }
+          ]
+          resources: {
+            cpu: json('0.5')
+            memory: '1Gi'
+          }
+        }
+      ]
+      scale: {
+        minReplicas: 0
+        maxReplicas: 1
+      }
+    }
+  }  
+}
 
 module chromaModule 'chroma.bicep' = {
   name: 'chromaModule'
