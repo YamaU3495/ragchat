@@ -80,7 +80,6 @@ resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
         allowInsecure: false
       }
       secrets: []
-      registries: []
     }
     template: {
       containers: [
@@ -128,16 +127,16 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         {
           name: 'backend'
           image: backendImage
-          env: [
-            {
-              name: 'MONGODB_URI'
-              value: 'mongodb://${mongodbVM.properties.networkProfile.networkInterfaces[0].properties.privateIPAddress}:27017'
-            }
-            {
-              name: 'CHROMA_URL'
-              value: 'http://${chromaVM.properties.networkProfile.networkInterfaces[0].properties.privateIPAddress}:8000'
-            }
-          ]
+          // env: [
+          //   {
+          //     name: 'MONGODB_URI'
+          //     value: 'mongodb://${mongodbVM.properties.networkProfile.networkInterfaces[0].properties.privateIPAddress}:27017'
+          //   }
+          //   {
+          //     name: 'CHROMA_URL'
+          //     value: 'http://${chromaVM.properties.networkProfile.networkInterfaces[0].properties.privateIPAddress}:8000'
+          //   }
+          // ]
           resources: {
             cpu: json('0.5')
             memory: '1Gi'

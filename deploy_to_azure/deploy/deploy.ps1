@@ -8,11 +8,11 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$AdminUsername,
     
-    [Parameter(Mandatory=$false)]
-    [string]$FrontendImage = "ragchat/ragchat-frontend:latest",
+    [Parameter(Mandatory=$true)]
+    [string]$FrontendImage,
     
-    [Parameter(Mandatory=$false)]
-    [string]$BackendImage = "ragchat/ragchat-backend:latest",
+    [Parameter(Mandatory=$true)]
+    [string]$BackendImage,
     
     [Parameter(Mandatory=$false)]
     [int]$MaxRetries = 3,
