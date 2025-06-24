@@ -14,7 +14,7 @@ COPY . .
 RUN npm run build -- --mode production
 
 # 本番ステージ
-FROM nginx:alpine
+FROM --platform=linux/amd64 nginx:alpine
 
 # 必要なツールをインストール
 RUN apk add --no-cache bash

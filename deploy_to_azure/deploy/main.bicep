@@ -31,6 +31,18 @@ param chromaVersion string = '1.0.13'
 @description('The SSH public key for the VM')
 param sshPublicKey string
 
+// @secure()
+// @description('The Azure OpenAI API Key')
+// param azureOpenAIApiKey string
+
+// @secure()
+// @description('The Azure Embedding Endpoint')
+// param azureEmbeddingEndpoint string
+
+// @secure()
+// @description('The Azure OpenAI Endpoint')
+// param azureOpenAIEndpoint string
+
 // Container Apps Environment
 resource containerAppsEnv 'Microsoft.App/managedEnvironments@2025-02-02-preview' = {
   name: 'ragchat-env'
@@ -75,7 +87,7 @@ resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
     configuration: {
       ingress: {
         external: true
-        targetPort: 3000
+        targetPort: 80
         transport: 'http'
         allowInsecure: false
       }
@@ -89,7 +101,7 @@ resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
           env: [
             {
               name: 'VITE_API_HOST'
-              value: backendApp.properties.configuration.ingress.fqdn
+              value: 'localhost'
             }
             {
               name: 'VITE_API_PORT'
@@ -107,15 +119,15 @@ resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
         }
       ]
       scale: {
-        minReplicas: 0
-        maxReplicas: 1
+        minReplicas: 1
+        maxReplicas: 3
       }
     }
   }
 }
 
 // Backend Container App
-resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
+resource backendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
   name: 'ragchat-backend'
   location: location
   properties: {
@@ -152,8 +164,8 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         }
       ]
       scale: {
-        minReplicas: 0
-        maxReplicas: 1
+        minReplicas: 1
+        maxReplicas: 3
       }
     }
   }  

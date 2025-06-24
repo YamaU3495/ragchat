@@ -5,7 +5,7 @@ services:
     build:
       context: ./chatapp
     environment:
-      - VITE_API_HOST=backend
+      - VITE_API_HOST=http://backend
       - VITE_API_PORT=8000
       - VITE_APP_TITLE=Docker RAG Chat
     ports:

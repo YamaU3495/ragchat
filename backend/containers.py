@@ -34,9 +34,9 @@ class Container(containers.DeclarativeContainer):
     embeddings = providers.Singleton(
         AzureOpenAIEmbeddings,
         api_key = os.getenv("AZURE_OPENAI_API_KEY"),  
-        api_version = "2024-10-21",
-        azure_endpoint =os.getenv("AZURE_EMBEDDING_ENDPOINT"),
-        model="text-embedding-3-small"
+        api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21"),
+        azure_endpoint = os.getenv("AZURE_EMBEDDING_ENDPOINT"),
+        model = os.getenv("AZURE_EMBEDDING_MODEL", "text-embedding-3-small")
     )
 
     # ChromaDB Settings
@@ -47,8 +47,8 @@ class Container(containers.DeclarativeContainer):
     # ChromaDB client provider
     client = providers.Singleton(
         chromadb.HttpClient,
-        host=config.chroma.host,
-        port=config.chroma.port,
+        host=os.getenv("CHROMA_HOST", config.chroma.host),
+        port=int(os.getenv("CHROMA_PORT", config.chroma.port)),
         settings=chroma_settings
     )
 
