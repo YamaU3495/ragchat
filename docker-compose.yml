@@ -4,10 +4,10 @@ services:
   frontend:
     build:
       context: ./chatapp
-      args:
-        - VITE_API_HOST=backend
-        - VITE_API_PORT=8000
-        - VITE_APP_TITLE="LocalRAG Chat"
+    environment:
+      - VITE_API_HOST=backend
+      - VITE_API_PORT=8000
+      - VITE_APP_TITLE=Docker RAG Chat
     ports:
       - "80:80"
       - "443:443"
