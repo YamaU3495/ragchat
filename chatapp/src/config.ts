@@ -8,10 +8,18 @@ interface Config {
   appTitle: string;
 }
 
-export const config: Config = {
-  api: {
-    host: import.meta.env.VITE_API_HOST,
-    port: import.meta.env.VITE_API_PORT
-  },
-  appTitle: import.meta.env.VITE_APP_TITLE
-}; 
+// グローバル設定から読み込み
+const getGlobalConfig = (): Config => {
+  // @ts-ignore - window.__APP_CONFIG__は動的に追加される
+  const globalConfig = window.__APP_CONFIG__;
+  
+  return {
+    api: {
+      host: globalConfig.api.host || '',
+      port: globalConfig.api.port || ''
+    },
+    appTitle: globalConfig.appTitle || 'LocalRAG Chat'
+  };
+};
+
+export const config: Config = getGlobalConfig(); 

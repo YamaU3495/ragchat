@@ -88,8 +88,16 @@ resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
           image: frontendImage
           env: [
             {
-              name: 'BACKEND_URL'
-              value: 'http://ragchat-backend'
+              name: 'VITE_API_HOST'
+              value: backendApp.properties.configuration.ingress.fqdn
+            }
+            {
+              name: 'VITE_API_PORT'
+              value: '443'
+            }
+            {
+              name: 'VITE_APP_TITLE'
+              value: 'Azure RAG Chat'
             }
           ]
           resources: {
@@ -114,7 +122,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
     managedEnvironmentId: containerAppsEnv.id
     configuration: {
       ingress: {
-        external: false
+        external: true
         targetPort: 8000
         transport: 'http'
         allowInsecure: false
