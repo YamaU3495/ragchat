@@ -1,7 +1,7 @@
 using ragchat.Components;
 using ragchat.Services;
 using MudBlazor.Services;
-
+using Microsoft.AspNetCore.Components.Authorization;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -24,6 +24,12 @@ else
 {
     builder.Services.AddScoped<IChatService, ChatService>();
 }
+
+// 認証関連の設定
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<CustomAuthenticationService>();
 
 var app = builder.Build();
 

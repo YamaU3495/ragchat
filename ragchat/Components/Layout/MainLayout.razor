@@ -1,30 +1,46 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+
 @using ragchat.Models
 @using ragchat.Services
 @using ragchat.Components.organisms
+@using System.Security.Claims
+
 @inject IChatService ChatService
 @inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu Sessions="sessions"
-                 ActiveSessionId="activeSessionId"
-                 OnSessionSelect="HandleSessionSelect"
-                 OnDeleteSession="HandleDeleteSession"
-                 OnNewChat="HandleNewChat"
-                 OnToggle="ToggleSidebar" />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <div class="chatHeader">
-                <span class="logo">LocalRAG Chat</span>
+    <AuthorizeView>
+        <Authorized>
+            <div class="sidebar">
+                <NavMenu Sessions="sessions"
+                        ActiveSessionId="activeSessionId"
+                        OnSessionSelect="HandleSessionSelect"
+                        OnDeleteSession="HandleDeleteSession"
+                        OnNewChat="HandleNewChat"
+                        OnToggle="ToggleSidebar" />
             </div>
-        </div>
-        <article class="content">
-            @Body
-        </article>
-    </main>
+
+            <main>
+                <div class="top-row px-4">
+                    <div class="chatHeader">
+                        <span class="logo">LocalRAG Chat</span>
+                    </div>
+                </div>
+                <article class="content">
+                    @Body
+                </article>
+            </main>
+        </Authorized>
+        <NotAuthorized>
+            <div class="login-main">
+                <Login />
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+
 </div>
 
 <div id="blazor-error-ui">
@@ -37,6 +53,17 @@
     private List<Session> sessions = new();
     private string? activeSessionId;
     private bool loaded = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user?.Identity?.IsAuthenticated != true && !NavigationManager.Uri.Contains("/login"))
+        {
+            NavigationManager.NavigateTo("/login", true);
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
