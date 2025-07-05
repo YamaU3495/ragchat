@@ -99,10 +99,11 @@
 
     private async Task HandleInputKeyDown(KeyboardEventArgs e)
     {
-        Logger.LogInformation($"HandleInputKeyDown called! e.Key: '{e.Key}'");
         if (e.Key == "Enter" && !e.ShiftKey)
         {
-            await HandleSend();
+            Logger.LogInformation($"HandleInputKeyDown Enter called!");
+            // TODO: 何故かこっちから呼ぶとテキストフィールドが初期化されない
+            // await HandleSend();
         }
 
     }
