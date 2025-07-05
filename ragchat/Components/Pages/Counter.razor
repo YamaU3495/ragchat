@@ -9,11 +9,23 @@
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
+
+<input type="text" @bind="bindValue" @oninput="OnChange" />
+
+<div>bindValue:@bindValue</div>
+
+
 @code {
     private int currentCount = 0;
+    private string bindValue = string.Empty;
 
     private void IncrementCount()
     {
         currentCount++;
+    }
+
+    private void OnChange(ChangeEventArgs e)
+    {
+        bindValue = e.Value.ToString();
     }
 }

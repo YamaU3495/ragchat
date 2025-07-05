@@ -1,0 +1,180 @@
+@page "/"
+@using ragchat.Models
+@using ragchat.Services
+@using Markdig
+@using ragchat.Components.organisms
+@inject IChatService ChatService
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+@using Microsoft.Extensions.Logging
+@inject ILogger<ChatPage> Logger
+
+<PageTitle>RAG Chat</PageTitle>
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<ChatArea Messages="messages"
+          ActiveSessionId="activeSessionId"
+          Loading="loading"
+          OnStartEdit="HandleStartEdit"
+          OnSaveEdit="HandleSaveEdit"
+          OnCancelEdit="HandleCancelEdit"
+          OnEditKeyDown="HandleEditKeyDown"
+          OnCopyMessage="HandleCopyMessage"
+          RenderMarkdown="RenderMarkdown" />
+<ChatInput @bind-TextFieldValue="inputValue"
+           Loading="loading"
+           OnSend="HandleSend"
+           InputKeyDown="HandleInputKeyDown" />
+
+@code {
+    private List<Message> messages = new();
+    private string inputValue = string.Empty;
+    private string? activeSessionId;
+    private bool loading = false;
+    private bool sidebarOpen = true;
+    private string bindValue = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.CompletedTask;
+    }
+
+    private async Task OnTextFieldValueChanged(string value)
+    {
+        inputValue = value;
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleSend()
+    {
+        Logger.LogInformation($"HandleSend called! inputValue: '{inputValue}'");
+        if (string.IsNullOrWhiteSpace(inputValue)) return;
+
+        loading = true;
+        var originalMessages = new List<Message>(messages);
+        
+        try
+        {
+            var newMessage = new Message
+            {
+                Content = inputValue,
+                IsUser = true,
+                No = messages.Count + 1
+            };
+            messages.Add(newMessage);
+            var currentInput = inputValue;
+            inputValue = string.Empty;
+            StateHasChanged();
+
+            var response = await ChatService.SendMessageAsync(currentInput, activeSessionId);
+            
+            var aiMessage = new Message
+            {
+                Content = response.Content,
+                IsUser = false,
+                No = response.No
+            };
+            messages.Add(aiMessage);
+
+            if (activeSessionId == null)
+            {
+                activeSessionId = response.SessionId;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"エラーが発生しました: {ex.Message}", Severity.Error);
+            messages = originalMessages;
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleInputKeyDown(KeyboardEventArgs e)
+    {
+        Logger.LogInformation($"HandleInputKeyDown called! e.Key: '{e.Key}'");
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await HandleSend();
+        }
+
+    }
+
+    private void HandleStartEdit(Message message)
+    {
+        message.IsEditing = true;
+        message.EditValue = message.Content;
+        StateHasChanged();
+    }
+
+    private async Task HandleSaveEdit(Message message)
+    {
+        if (activeSessionId == null) return;
+
+        try
+        {
+            var messageIndex = messages.IndexOf(message);
+            await ChatService.EditMessageAsync(activeSessionId, messageIndex, message.EditValue);
+            message.Content = message.EditValue;
+            message.IsEditing = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"メッセージの編集に失敗しました: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void HandleCancelEdit(Message message)
+    {
+        message.IsEditing = false;
+        message.EditValue = message.Content;
+        StateHasChanged();
+    }
+
+    private async Task HandleEditKeyDown((KeyboardEventArgs e, Message message) param)
+    {
+        if (param.e.Key == "Enter" && !param.e.ShiftKey)
+        {
+            await HandleSaveEdit(param.message);
+        }
+    }
+
+    private async Task HandleCopyMessage(string content)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", content);
+            Snackbar.Add("コピーしました", Severity.Success);
+        }
+        catch
+        {
+            Snackbar.Add("コピーに失敗しました", Severity.Error);
+        }
+    }
+
+    private string RenderMarkdown(string content)
+    {
+        try
+        {
+            var pipeline = new MarkdownPipelineBuilder()
+                .UseAdvancedExtensions()
+                .Build();
+            
+            return Markdown.ToHtml(content, pipeline);
+        }
+        catch
+        {
+            return content.Replace("**", "<strong>").Replace("**", "</strong>")
+                         .Replace("*", "<em>").Replace("*", "</em>")
+                         .Replace("\n", "<br>");
+        }
+    }
+} 

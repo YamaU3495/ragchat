@@ -1,0 +1,39 @@
+﻿@using ragchat.Models
+
+<div class="sidebarHeader">
+    <MudIconButton Icon="@Icons.Material.Filled.Menu" 
+                  OnClick="@OnToggle"
+                  Color="Color.Inherit"
+                  Size="Size.Small" />
+    <div style="flex: 1;"></div>
+    <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                  OnClick="@OnNewChat"
+                  Color="Color.Inherit"
+                  Size="Size.Small" />
+</div>
+<div class="sidebarItems">
+    @if (Sessions != null)
+    {
+        @foreach (var session in Sessions)
+        {
+            <div class="sidebarItem @(session.Id == ActiveSessionId ? "active" : "")"
+                 @onclick="@(() => OnSessionSelect.InvokeAsync(session.Id))">
+                <span class="label">@session.Label</span>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                              OnClick="@(() => OnDeleteSession.InvokeAsync(session.Id))"
+                              Color="Color.Inherit"
+                              Size="Size.Small" />
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public List<Session>? Sessions { get; set; }
+    [Parameter] public string? ActiveSessionId { get; set; }
+    [Parameter] public EventCallback<string> OnSessionSelect { get; set; }
+    [Parameter] public EventCallback<string> OnDeleteSession { get; set; }
+    [Parameter] public EventCallback OnNewChat { get; set; }
+    [Parameter] public EventCallback OnToggle { get; set; }
+}
+

@@ -1,10 +1,29 @@
 using ragchat.Components;
+using ragchat.Services;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Add MudBlazor services
+builder.Services.AddMudServices();
+
+// Add HTTP client for API calls
+builder.Services.AddHttpClient();
+
+// ChatServiceの切り替え
+var chatServiceType = builder.Configuration["ChatService:Type"] ?? "Api";
+if (chatServiceType == "InMemory")
+{
+    builder.Services.AddSingleton<IChatService, InMemoryChatService>();
+}
+else
+{
+    builder.Services.AddScoped<IChatService, ChatService>();
+}
 
 var app = builder.Build();
 

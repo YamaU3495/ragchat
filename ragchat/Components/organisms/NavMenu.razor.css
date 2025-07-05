@@ -103,3 +103,13 @@
         overflow-y: auto;
     }
 }
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  min-height: 48px;
+  border-bottom: 1px solid #222;
+  background: #181818;
+}

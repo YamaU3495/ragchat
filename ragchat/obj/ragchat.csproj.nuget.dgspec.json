@@ -42,6 +42,24 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.Components.Web": {
+              "target": "Package",
+              "version": "[8.0.12, )"
+            },
+            "MudBlazor": {
+              "target": "Package",
+              "version": "[8.8.0, )"
+            },
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "markdig": {
+              "target": "Package",
+              "version": "[0.41.3, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

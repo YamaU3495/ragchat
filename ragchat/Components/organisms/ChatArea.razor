@@ -1,0 +1,87 @@
+@using ragchat.Models
+
+<div class="chatArea">
+    <div class="chatAreaInner">
+        @if (Messages != null)
+        {
+            @foreach (var message in Messages)
+            {
+                <div class="messageRow @(message.IsUser ? "user" : "ai")">
+                    @if (!message.IsUser)
+                    {
+                        <MudAvatar Color="Color.Secondary">
+                            <MudIcon Icon="@Icons.Material.Filled.SmartToy" />
+                        </MudAvatar>
+                    }
+                    <div>
+                        <div class="messageBubble @(message.IsUser ? "user" : "ai")">
+                            @if (message.IsEditing)
+                            {
+                                <div class="editContainer">
+                                    <MudTextField @bind-Value="message.EditValue"
+                                                 Variant="Variant.Outlined"
+                                                 Lines="3"
+                                                 AutoSize="true"
+                                                 @onkeydown="@(async (e) => await OnEditKeyDown.InvokeAsync((e, message)))" />
+                                    <div class="editButtons">
+                                        <MudButton Variant="Variant.Outlined"
+                                                   OnClick="@(() => OnSaveEdit.InvokeAsync(message))"
+                                                   Size="Size.Small">
+                                            送信する
+                                        </MudButton>
+                                        <MudButton Variant="Variant.Outlined"
+                                                   OnClick="@(() => OnCancelEdit.InvokeAsync(message))"
+                                                   Size="Size.Small">
+                                            キャンセル
+                                        </MudButton>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="messageActions">
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                                  OnClick="@(() => OnCopyMessage.InvokeAsync(message.Content))"
+                                                  Size="Size.Small" />
+                                    @if (message.IsUser && ActiveSessionId != null)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                      OnClick="@(() => OnStartEdit.InvokeAsync(message))"
+                                                      Size="Size.Small" />
+                                    }
+                                </div>
+                                <div class="messageContent">
+                                    @((MarkupString)(RenderMarkdown?.Invoke(message.Content) ?? message.Content))
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    @if (message.IsUser)
+                    {
+                        <MudAvatar Color="Color.Secondary">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" />
+                        </MudAvatar>
+                    }
+                </div>
+            }
+        }
+        @if (Loading)
+        {
+            <div class="loadingContainer">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<Message>? Messages { get; set; }
+    [Parameter] public string? ActiveSessionId { get; set; }
+    [Parameter] public bool Loading { get; set; }
+    [Parameter] public EventCallback<Message> OnStartEdit { get; set; }
+    [Parameter] public EventCallback<Message> OnSaveEdit { get; set; }
+    [Parameter] public EventCallback<Message> OnCancelEdit { get; set; }
+    [Parameter] public EventCallback<(KeyboardEventArgs, Message)> OnEditKeyDown { get; set; }
+    [Parameter] public EventCallback<string> OnCopyMessage { get; set; }
+    [Parameter] public Func<string, string>? RenderMarkdown { get; set; }
+} 

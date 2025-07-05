@@ -1,0 +1,20 @@
+.chatInputArea {
+  background: #fff;
+  padding: 16px 24px;
+  box-shadow: 0 -2px 8px #0001;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  bottom: 0;
+}
+.chatInputBox {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  outline: none;
+  background: #fff;
+  color: #000;
+} 

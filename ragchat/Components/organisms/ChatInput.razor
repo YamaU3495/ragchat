@@ -1,0 +1,41 @@
+@using Microsoft.Extensions.Logging
+@inject ILogger<ChatInput> Logger
+@rendermode InteractiveServer
+
+<div class="chatInputArea">
+    
+    <MudTextField  @bind-Value="TextFieldValue"
+                   TextChanged="OnTextFieldValueChanged"
+                   OnKeyDown="OnInputKeyDown"
+                   Variant="Variant.Outlined"
+                   Lines="1"
+                   Placeholder="メッセージを入力..."
+                   Class="chatInputBox" 
+                   Immediate="true"/>
+
+    <MudIconButton Icon="@Icons.Material.Filled.Send"
+                  OnClick="@OnSend"
+                  Disabled="@IsDisabled"
+                  Color="Color.Primary" />
+</div>
+
+@code {
+    [Parameter] public string TextFieldValue { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> TextFieldValueChanged { get; set; }
+    [Parameter] public bool Loading { get; set; }
+    [Parameter] public EventCallback OnSend { get; set; }
+    [Parameter] public EventCallback<KeyboardEventArgs> InputKeyDown { get; set; }
+    
+    private bool IsDisabled => string.IsNullOrWhiteSpace(TextFieldValue);
+
+
+    private async Task OnTextFieldValueChanged(string value)
+    {
+        await TextFieldValueChanged.InvokeAsync(value);
+    }
+
+    private async Task OnInputKeyDown(KeyboardEventArgs e)
+    {
+        await InputKeyDown.InvokeAsync(e);
+    }
+}

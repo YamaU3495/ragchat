@@ -192,3 +192,7 @@ mongo_data/
 *.p12
 *.pfx
 *.p12
+
+# C#
+bin/
+obj/
