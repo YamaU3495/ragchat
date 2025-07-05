@@ -9,7 +9,8 @@
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
-
+@inject CustomAuthenticationService AuthService
+@inject ILogger<MainLayout> Logger
 
 <div class="page">
     <AuthorizeView>
@@ -27,6 +28,15 @@
                 <div class="top-row px-4">
                     <div class="chatHeader">
                         <span class="logo">LocalRAG Chat</span>
+                        <div class="user-info">
+                            <span>@context.User.Identity?.Name</span>
+                            <MudButton OnClick="SignOut" 
+                                        Variant="Variant.Text" 
+                                        Color="Color.Primary"
+                                        Size="Size.Small">
+                                ログアウト
+                            </MudButton>
+                        </div>
                     </div>
                 </div>
                 <article class="content">
@@ -61,6 +71,7 @@
 
         if (user?.Identity?.IsAuthenticated != true && !NavigationManager.Uri.Contains("/login"))
         {
+            Logger.LogInformation("ログインしていません。ログインページにリダイレクトします。");
             NavigationManager.NavigateTo("/login", true);
         }
     }
@@ -108,5 +119,11 @@
     {
         var json = System.Text.Json.JsonSerializer.Serialize(sessions);
         await JSRuntime.InvokeVoidAsync("localStorage.setItem", "sessions", json);
+    }
+
+    private async Task SignOut()
+    {
+        await AuthService.SignOutAsync();
+        NavigationManager.NavigateTo("/login", true);
     }
 }

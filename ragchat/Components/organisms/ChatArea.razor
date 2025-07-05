@@ -21,7 +21,7 @@
                                     <MudTextField @bind-Value="message.EditValue"
                                                  Variant="Variant.Outlined"
                                                  Lines="3"
-                                                 AutoSize="true"
+                                                 AutoGrow="true"
                                                  @onkeydown="@(async (e) => await OnEditKeyDown.InvokeAsync((e, message)))" />
                                     <div class="editButtons">
                                         <MudButton Variant="Variant.Outlined"
