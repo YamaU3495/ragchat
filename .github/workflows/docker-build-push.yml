@@ -18,6 +18,7 @@ env:
   DOCKER_REGISTRY: docker.io
   FRONTEND_IMAGE_NAME: ragchat-frontend
   BACKEND_IMAGE_NAME: ragchat-backend
+  RAGCHAT_IMAGE_NAME: ragchat-frontend-blazor
 
 jobs:
   build-and-push:
@@ -40,12 +41,12 @@ jobs:
     - name: Build and push Frontend image
       uses: docker/build-push-action@v5
       with:
-        context: ./chatapp
-        file: ./chatapp/Dockerfile
+        context: ./ragchat
+        file: ./ragchat/Dockerfile
         push: ${{ inputs.push_to_registry }}
         tags: |
-          ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ inputs.version }}
-          ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
+          ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.RAGCHAT_IMAGE_NAME }}:${{ inputs.version }}
+          ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.RAGCHAT_IMAGE_NAME }}:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
         platforms: linux/amd64,linux/arm64

@@ -11,18 +11,34 @@ builder.Services.AddRazorComponents()
 // Add MudBlazor services
 builder.Services.AddMudServices();
 
-// Add HTTP client for API calls
+// Add HTTP client factory for API calls
 builder.Services.AddHttpClient();
+
+// Configure named HttpClient for API calls
+builder.Services.AddHttpClient("ApiClient", client =>
+{
+    var apiConfig = builder.Configuration.GetSection("Api");
+    var protocol = apiConfig["Protocol"] ?? "http";
+    var host = apiConfig["Host"] ?? "localhost";
+    var port = apiConfig["Port"] ?? "8000";
+    var baseUrl = $"{protocol}://{host}:{port}";
+    
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Add("User-Agent", "RagChat/1.0");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // ChatServiceの切り替え
 var chatServiceType = builder.Configuration["ChatService:Type"] ?? "Api";
 if (chatServiceType == "InMemory")
-{
+{   
+    Console.WriteLine("ChatService: InMemory");
     builder.Services.AddSingleton<IChatService, InMemoryChatService>();
 }
 else
 {
-    builder.Services.AddScoped<IChatService, ChatService>();
+    Console.WriteLine("ChatService: Api");
+    builder.Services.AddScoped<IChatService, ApiChatService>();
 }
 
 var app = builder.Build();

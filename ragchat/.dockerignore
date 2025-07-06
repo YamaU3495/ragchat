@@ -1,0 +1,46 @@
+# Docker build context ignore file
+
+# Build outputs
+bin/
+obj/
+out/
+
+# IDE and editor files
+.vs/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Package files
+*.nupkg
+*.snupkg
+
+# User-specific files
+*.user
+*.userosscache
+*.sln.docstates 

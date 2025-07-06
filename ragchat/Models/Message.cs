@@ -41,4 +41,33 @@ public class EditMessageRequest
 public class ConversationHistory
 {
     public List<Message> Messages { get; set; } = new();
+}
+
+// APIの仕様に合わせたモデルクラス
+public class ApiChatMessage
+{
+    public string Content { get; set; } = string.Empty;
+    public string? SessionId { get; set; }
+}
+
+public class ApiChatResponse
+{
+    public int No { get; set; }
+    public string Role { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public string SessionId { get; set; } = string.Empty;
+    public int RequestNo { get; set; }
+}
+
+public class ApiChatHistoryResponse
+{
+    public List<ApiChatMessageHistory> Messages { get; set; } = new();
+    public string SessionId { get; set; } = string.Empty;
+}
+
+public class ApiChatMessageHistory
+{
+    public int No { get; set; }
+    public string Role { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
 } 
