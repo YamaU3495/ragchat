@@ -6,14 +6,14 @@
 @inject IJSRuntime JSRuntime
 
 <div class="page">
-    <div class="sidebar">
+    @* <div class="sidebar">
         <NavMenu Sessions="sessions"
                  ActiveSessionId="activeSessionId"
                  OnSessionSelect="HandleSessionSelect"
                  OnDeleteSession="HandleDeleteSession"
                  OnNewChat="HandleNewChat"
                  OnToggle="ToggleSidebar" />
-    </div>
+    </div> *@
 
     <main>
         <div class="top-row px-4">
@@ -34,52 +34,7 @@
 </div>
 
 @code {
-    private List<Session> sessions = new();
-    private string? activeSessionId;
-    private bool loaded = false;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && !loaded)
-        {
-            var sessionsJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "sessions");
-            if (!string.IsNullOrEmpty(sessionsJson))
-            {
-                sessions = System.Text.Json.JsonSerializer.Deserialize<List<Session>>(sessionsJson) ?? new List<Session>();
-                if (sessions.Any())
-                {
-                    activeSessionId = sessions.First().Id;
-                }
-            }
-            loaded = true;
-            StateHasChanged();
-        }
-    }
-
-    private void HandleSessionSelect(string sessionId)
-    {
-        activeSessionId = sessionId;
-        StateHasChanged();
-    }
-    private async Task HandleDeleteSession(string sessionId)
-    {
-        sessions.RemoveAll(s => s.Id == sessionId);
-        await SaveSessions();
-        StateHasChanged();
-    }
-    private async Task HandleNewChat()
-    {
-        // 新規チャット作成時の処理
-        await SaveSessions();
-        StateHasChanged();
-    }
-    private void ToggleSidebar()
-    {
-        StateHasChanged();
-    }
-    private async Task SaveSessions()
-    {
-        var json = System.Text.Json.JsonSerializer.Serialize(sessions);
-        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "sessions", json);
-    }
+    // private List<Session> sessions = new();
+    // private string? activeSessionId;
+    // private bool loaded = false;
 }
