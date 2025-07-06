@@ -16,15 +16,6 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<AuthorizeView>
-    <Authorized>
-        <p>Hello, @context.User.Identity?.Name!</p>
-    </Authorized>
-    <NotAuthorized>
-        <p>You're not authorized.</p>
-    </NotAuthorized>
-</AuthorizeView>
-
 <ChatArea Messages="messages"
           ActiveSessionId="activeSessionId"
           Loading="loading"
@@ -92,8 +83,6 @@
             if (activeSessionId == null)
             {
                 activeSessionId = response.SessionId;
-
-                await JSRuntime.InvokeVoidAsync("setCookie", "activeSessionId", activeSessionId, 30);
             }
         }
         catch (Exception ex)
