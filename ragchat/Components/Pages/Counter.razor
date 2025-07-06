@@ -26,6 +26,6 @@
 
     private void OnChange(ChangeEventArgs e)
     {
-        bindValue = e.Value.ToString();
+        bindValue = e.Value?.ToString() ?? string.Empty;
     }
 }

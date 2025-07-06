@@ -35,7 +35,6 @@
     private string inputValue = string.Empty;
     private string? activeSessionId;
     private bool loading = false;
-    private bool sidebarOpen = true;
     private string bindValue = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -104,6 +103,7 @@
             Logger.LogInformation($"HandleInputKeyDown Enter called!");
             // TODO: 何故かこっちから呼ぶとテキストフィールドが初期化されない
             // await HandleSend();
+            await Task.CompletedTask;
         }
 
     }
