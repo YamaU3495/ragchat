@@ -28,7 +28,7 @@
     [Parameter] public EventCallback<KeyboardEventArgs> InputKeyDown { get; set; }
     
     private bool IsDisabled => string.IsNullOrWhiteSpace(TextFieldValue);
-    private MudTextField<string>? textField;
+    private MudTextField<string> textField;
 
     private async Task OnTextFieldValueChanged(string value)
     {
@@ -43,7 +43,7 @@
 
     override protected async Task OnAfterRenderAsync(bool firstRender)
     {
-        if(TextFieldValue.Length == 0 && textField != null){
+        if(TextFieldValue.Length == 0){
             await textField.FocusAsync();
         }
     }
