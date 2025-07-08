@@ -31,17 +31,17 @@ param chromaVersion string = '1.0.13'
 @description('The SSH public key for the VM')
 param sshPublicKey string
 
-// @secure()
-// @description('The Azure OpenAI API Key')
-// param azureOpenAIApiKey string
+@secure()
+@description('The Azure OpenAI API Key')
+param azureOpenAIApiKey string
 
-// @secure()
-// @description('The Azure Embedding Endpoint')
-// param azureEmbeddingEndpoint string
+@secure()
+@description('The Azure Embedding Endpoint')
+param azureEmbeddingEndpoint string
 
-// @secure()
-// @description('The Azure OpenAI Endpoint')
-// param azureOpenAIEndpoint string
+@secure()
+@description('The Azure OpenAI Endpoint')
+param azureOpenAIEndpoint string
 
 // Container Apps Environment
 resource containerAppsEnv 'Microsoft.App/managedEnvironments@2025-02-02-preview' = {
@@ -87,7 +87,7 @@ resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
     configuration: {
       ingress: {
         external: true
-        targetPort: 80
+        targetPort: 8001
         transport: 'http'
         allowInsecure: false
       }
@@ -99,17 +99,41 @@ resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
           name: 'frontend'
           image: frontendImage
           env: [
-            {
-              name: 'VITE_API_HOST'
-              value: 'localhost'
+            { 
+              name: 'ASPNETCORE_ENVIRONMENT'
+              value: 'Production'
             }
-            {
-              name: 'VITE_API_PORT'
-              value: '443'
+            { 
+              name: 'ASPNETCORE_URLS'
+              value: 'http://+:8001'
             }
-            {
-              name: 'VITE_APP_TITLE'
-              value: 'Azure RAG Chat'
+            { 
+              name: 'Logging__LogLevel__Default'
+              value: 'Information'
+            }
+            { 
+              name: 'Logging__LogLevel__Microsoft__AspNetCore'
+              value: 'Warning'
+            }
+            { 
+              name: 'AllowedHosts'
+              value: '*'
+            }
+            { 
+              name: 'Api__Host'
+              value: 'ragchat-backend'
+            }
+            { 
+              name: 'Api__Port'
+              value: '8000'
+            }
+            { 
+              name: 'Api__Protocol'
+              value: 'http'
+            }
+            { 
+              name: 'ChatService__Type'
+              value: 'Api'
             }
           ]
           resources: {
@@ -119,7 +143,7 @@ resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
         }
       ]
       scale: {
-        minReplicas: 0
+        minReplicas: 1
         maxReplicas: 1
       }
     }
@@ -134,12 +158,25 @@ resource backendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
     managedEnvironmentId: containerAppsEnv.id
     configuration: {
       ingress: {
-        external: true
+        external: false
         targetPort: 8000
         transport: 'http'
         allowInsecure: false
       }
-      secrets: []
+      secrets: [
+        {
+          name: 'azure-openai-endpoint'
+          value: azureOpenAIEndpoint
+        }
+        {
+          name: 'azure-openai-api-key'
+          value: azureOpenAIApiKey
+        }
+        {
+          name: 'azure-embedding-endpoint'
+          value: azureEmbeddingEndpoint
+        }
+      ]
       registries: []
     }
     template: {
@@ -147,16 +184,28 @@ resource backendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
         {
           name: 'backend'
           image: backendImage
-          // env: [
-          //   {
-          //     name: 'MONGODB_URI'
-          //     value: 'mongodb://${mongodbVM.properties.networkProfile.networkInterfaces[0].properties.privateIPAddress}:27017'
-          //   }
-          //   {
-          //     name: 'CHROMA_URL'
-          //     value: 'http://${chromaVM.properties.networkProfile.networkInterfaces[0].properties.privateIPAddress}:8000'
-          //   }
-          // ]
+          env: [
+            {
+              name: 'CHROMA_HOST'
+              value: chromaModule.outputs.chromaPrivateIP
+            }
+            {
+              name: 'CHROMA_PORT'
+              value: '8000'
+            }
+            {
+              name: 'azure-openai-endpoint'
+              secretRef: 'azure-openai-endpoint'
+            }
+            {
+              name: 'azure-openai-api-key'
+              secretRef: 'azure-openai-api-key'
+            }
+            {
+              name: 'azure-embedding-endpoint'
+              secretRef: 'azure-embedding-endpoint'
+            }
+          ]
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
@@ -164,7 +213,7 @@ resource backendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
         }
       ]
       scale: {
-        minReplicas: 0
+        minReplicas: 1
         maxReplicas: 1
       }
     }

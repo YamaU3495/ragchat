@@ -34,6 +34,47 @@ if (-not $?) {
     exit 1
 }
 
+# Read values from .env file
+$EnvFilePath = "..\..\backend\.env"
+if (-not (Test-Path $EnvFilePath -PathType Leaf -ErrorAction SilentlyContinue)) {
+    Write-Error ".env file not found at $EnvFilePath"
+    exit 1
+}
+
+# Initialize variables
+$azureOpenAIApiKey = ""
+$azureEmbeddingEndpoint = ""
+$azureOpenAIEndpoint = ""
+
+# Read and parse .env file
+Get-Content $EnvFilePath | ForEach-Object {
+    if ($_ -match "^AZURE_OPENAI_API_KEY=(.*)$") {
+        $azureOpenAIApiKey = $matches[1]
+    }
+    elseif ($_ -match "^AZURE_EMBEDDING_ENDPOINT=(.*)$") {
+        $azureEmbeddingEndpoint = $matches[1]
+    }
+    elseif ($_ -match "^AZURE_OPENAI_ENDPOINT=(.*)$") {
+        $azureOpenAIEndpoint = $matches[1]
+    }
+}
+
+# Validate required values
+if (-not $azureOpenAIApiKey) {
+    Write-Error "AZURE_OPENAI_API_KEY not found in .env file"
+    exit 1
+}
+if (-not $azureEmbeddingEndpoint) {
+    Write-Error "AZURE_EMBEDDING_ENDPOINT not found in .env file"
+    exit 1
+}
+if (-not $azureOpenAIEndpoint) {
+    Write-Error "AZURE_OPENAI_ENDPOINT not found in .env file"
+    exit 1
+}
+
+Write-Host "Successfully loaded Azure configuration from .env file"
+
 # SSH鍵の作成（存在しない場合のみ）
 $SshKeyDir = "$HOME/.ssh"
 $SshPrivateKeyPath = "$SshKeyDir/id_ragchat_rsa"
@@ -80,7 +121,10 @@ az deployment group create `
         frontendImage=$frontendImage `
         backendImage=$backendImage `
         adminUsername=$AdminUsername `
-        sshPublicKey=$(cat "$($SshPrivateKeyPath).pub")
+        sshPublicKey=$(cat "$($SshPrivateKeyPath).pub") `
+        azureOpenAIApiKey=$azureOpenAIApiKey `
+        azureEmbeddingEndpoint=$azureEmbeddingEndpoint `
+        azureOpenAIEndpoint=$azureOpenAIEndpoint
 
 if ($LASTEXITCODE -eq 0) {
     $success = $true
