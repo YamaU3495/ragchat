@@ -125,7 +125,7 @@ resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
             }
             { 
               name: 'Api__Port'
-              value: '8000'
+              value: '80'
             }
             { 
               name: 'Api__Protocol'
@@ -159,9 +159,9 @@ resource backendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
     configuration: {
       ingress: {
         external: false
-        targetPort: 8000
+        targetPort: 8001
         transport: 'http'
-        allowInsecure: false
+        allowInsecure: true
       }
       secrets: [
         {
@@ -194,15 +194,15 @@ resource backendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
               value: '8000'
             }
             {
-              name: 'azure-openai-endpoint'
+              name: 'AZURE_OPENAI_ENDPOINT'
               secretRef: 'azure-openai-endpoint'
             }
             {
-              name: 'azure-openai-api-key'
+              name: 'AZURE_OPENAI_API_KEY'
               secretRef: 'azure-openai-api-key'
             }
             {
-              name: 'azure-embedding-endpoint'
+              name: 'AZURE_EMBEDDING_ENDPOINT'
               secretRef: 'azure-embedding-endpoint'
             }
           ]
