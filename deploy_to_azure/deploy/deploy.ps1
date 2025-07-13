@@ -18,7 +18,10 @@ param(
     [int]$MaxRetries = 3,
     
     [Parameter(Mandatory=$false)]
-    [int]$RetryDelaySeconds = 30
+    [int]$RetryDelaySeconds = 30,
+
+    [Parameter(Mandatory=$false)]
+    [string]$MongodbPassword
 )
 
 # Check if Azure CLI is installed
@@ -124,7 +127,8 @@ az deployment group create `
         sshPublicKey=$(cat "$($SshPrivateKeyPath).pub") `
         azureOpenAIApiKey=$azureOpenAIApiKey `
         azureEmbeddingEndpoint=$azureEmbeddingEndpoint `
-        azureOpenAIEndpoint=$azureOpenAIEndpoint
+        azureOpenAIEndpoint=$azureOpenAIEndpoint `
+        mongodbPassword=$MongodbPassword
 
 if ($LASTEXITCODE -eq 0) {
     $success = $true

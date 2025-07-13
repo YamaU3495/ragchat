@@ -33,8 +33,6 @@ class ChatRepositoryFactory:
                 port = int(kwargs.get("port", os.getenv("MONGODB_PORT", "27017")))
                 db_name = kwargs.get("db_name", "chatdb")
                 collection_name = kwargs.get("collection_name", "messages")
-                # username = kwargs.get("username", "root")
-                # password = kwargs.get("password", "root")
                 cls._instance = MongoChatRepo(host, port, db_name=db_name, collection_name=collection_name)
             else:
                 raise ValueError(f"Unknown database type: {db_type}")

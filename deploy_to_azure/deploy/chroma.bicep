@@ -7,6 +7,9 @@ param vnetName string
 @description('ChromaDBデプロイ用の仮想ネットワーク内の既存サブネット名')
 param chromaDBSubnetName string
 
+@description('Container Appsサブネットのアドレス範囲 - Chromaへのアクセス制御に使用')
+param containerAppsSubnetPrefix string
+
 @description('Chroma VMの管理者ユーザー名 - SSH接続に使用')
 param adminUsername string
 
@@ -17,7 +20,7 @@ param sshPublicKey string
 param chromaVersion string = '1.0.13'
 
 // Chroma VM用のネットワークセキュリティグループ
-// SSH（22番ポート）とChroma（8000番ポート）への外部アクセスを許可
+// Container AppsサブネットからのChroma（8000番ポート）への外部アクセスのみを許可
 resource chromaNSG 'Microsoft.Network/networkSecurityGroups@2024-07-01' = {
   name: 'chroma-nsg'
   location: location
@@ -38,16 +41,30 @@ resource chromaNSG 'Microsoft.Network/networkSecurityGroups@2024-07-01' = {
         }
       }
       {
-        name: 'AllowChroma'
+        name: 'AllowChromaFromContainerApps'
         properties: {
-          description: 'Chromaサービス（8000番ポート）への接続を許可'
+          description: 'Container AppsサブネットからのChromaサービス（8000番ポート）への接続を許可'
           protocol: 'Tcp'
           sourcePortRange: '*'
           destinationPortRange: '8000'
-          sourceAddressPrefix: '*'
+          sourceAddressPrefix: containerAppsSubnetPrefix
           destinationAddressPrefix: '*'
           access: 'Allow'
           priority: 1100
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'AllowMongoFromContainerApps'
+        properties: {
+          description: 'Container Appsサブネットからのmongodbサービス（27017番ポート）への接続を許可'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '27017'
+          sourceAddressPrefix: containerAppsSubnetPrefix
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 1200
           direction: 'Inbound'
         }
       }
@@ -87,7 +104,6 @@ resource chromaNIC 'Microsoft.Network/networkInterfaces@2024-07-01' = {
   location: location     // リソースの場所 - リソースグループと同じ場所
   properties: {
     // ネットワークセキュリティグループの関連付け
-    // SSH（22番）とChroma（8000番）ポートへのアクセスを制御
     networkSecurityGroup: {
       id: chromaNSG.id
     }
@@ -174,7 +190,16 @@ services:
       - net
     environment:
       - ANONYMIZED_TELEMETRY=False
-
+  mongo:
+    image: mongo:8.0.10
+    ports:
+      - "8081:8081"
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_ROOT_USERNAME: root
+    volumes:
+      - ./mongo_data:/data/db
 EOF
 chown $USER:$USER /home/$USER/docker-compose.yml
 cd /home/$USER
@@ -214,10 +239,6 @@ sudo -u $USER docker-compose up -d
 // このIPは仮想ネットワーク内でのみアクセス可能です
 output chromaPrivateIP string = chromaNIC.properties.ipConfigurations[0].properties.privateIPAddress 
 
-// パブリックIPリソースに割り当てられたパブリックIPアドレスを出力
-// このIPはインターネットからアクセス可能で、Chromaサービスへの接続に使用できます
-output chromaPublicIP string = chromaPublicIP.properties.ipAddress
-
 // Chromaサービスが動作するポート番号を出力
-// chromaPublicIPと組み合わせて完全なエンドポイントを構成: http://<chromaPublicIP>:8000
+// chromaPrivateIPと組み合わせて完全なエンドポイントを構成: http://<chromaPrivateIP>:8000
 output chromaPort string = '8000'

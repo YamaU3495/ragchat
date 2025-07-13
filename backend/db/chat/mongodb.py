@@ -3,14 +3,24 @@ from logging import getLogger
 from pymongo import MongoClient
 from .interface import IChatRepo
 from .models import ChatMessage
+import os
 
 class MongoChatRepo(IChatRepo):
     def __init__(self, host_name: str, port_num: int, db_name: str = "chatdb", collection_name: str = "messages"):
         self.logger = getLogger("uvicorn.app")
-        self.client = MongoClient(
-            host = host_name,
-            port = port_num
-        )
+        
+        # 環境変数から認証情報を取得
+        username = os.getenv("MONGODB_USER")
+        password = os.getenv("MONGODB_PASSWORD")
+        
+        if username and password:
+            # 認証情報がある場合はURIを使用
+            uri = f"mongodb://{username}:{password}@{host_name}:{port_num}/admin"
+            self.client = MongoClient(uri)
+        else:
+            # 認証情報がない場合は従来通り
+            self.client = MongoClient(host=host_name, port=port_num)
+        
         self.db = self.client[db_name]
         self.collection = self.db[collection_name]
 

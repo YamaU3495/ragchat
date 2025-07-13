@@ -10,8 +10,15 @@ param vnetName string = 'ragchat-vnet'
 @description('The name of the container apps subnet')
 param containerAppsSubnetName string = 'container-apps-subnet'
 
+@description('The address prefix for the container apps subnet')
+param containerAppsSubnetPrefix string = '10.0.0.0/23'
+
 @description('The name of the MongoDB subnet')
 param mongoDBSubnetName string = 'mongodb-subnet'
+
+@secure()
+@description('The password for MongoDB')
+param mongodbPassword string
 
 @description('The name of the ChromaDB subnet')
 param chromaDBSubnetName string = 'chromadb-subnet'
@@ -176,6 +183,10 @@ resource backendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
           name: 'azure-embedding-endpoint'
           value: azureEmbeddingEndpoint
         }
+        {
+          name: 'mongodb-password'
+          value: mongodbPassword
+        }
       ]
       registries: []
     }
@@ -205,6 +216,22 @@ resource backendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
               name: 'AZURE_EMBEDDING_ENDPOINT'
               secretRef: 'azure-embedding-endpoint'
             }
+            {
+              name: 'MONGODB_HOST'
+              value: chromaModule.outputs.chromaPrivateIP
+            }
+            {
+              name: 'MONGODB_PORT'
+              value: '27017'
+            }
+            {
+              name: 'MONGODB_USER'
+              value: 'root'
+            }
+            {
+              name: 'MONGODB_PASSWORD'
+              secretRef: 'mongodb-password'
+            }
           ]
           resources: {
             cpu: json('0.5')
@@ -229,6 +256,7 @@ module chromaModule 'chroma.bicep' = {
     adminUsername: adminUsername
     sshPublicKey: sshPublicKey
     chromaVersion: chromaVersion
+    containerAppsSubnetPrefix: containerAppsSubnetPrefix
   }
 }
 
