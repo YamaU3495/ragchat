@@ -41,6 +41,24 @@ else
     builder.Services.AddScoped<IChatService, ApiChatService>();
 }
 
+// SessionServiceの切り替え
+var sessionServiceType = builder.Configuration["SessionService:Type"] ?? "Cookie";
+if (sessionServiceType == "InMemory")
+{   
+    Console.WriteLine("SessionService: InMemory");
+    builder.Services.AddSingleton<ISessionService, InMemorySessionService>();
+}
+else if (sessionServiceType == "Api")
+{
+    Console.WriteLine("SessionService: Api");
+    builder.Services.AddScoped<ISessionService, ApiSessionService>();
+}
+else
+{
+    Console.WriteLine("SessionService: Cookie");
+    builder.Services.AddScoped<ISessionService, CookieSessionService>();
+}
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

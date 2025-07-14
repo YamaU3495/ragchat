@@ -2,27 +2,31 @@
 @using ragchat.Models
 @using ragchat.Services
 @using ragchat.Components.organisms
-@inject IChatService ChatService
+@inject ISessionService SessionService
 @inject IJSRuntime JSRuntime
+@inject ILogger<MainLayout> Logger
 
 <div class="page">
-    @* <div class="sidebar">
+    <div class="sidebar">
         <NavMenu Sessions="sessions"
                  ActiveSessionId="activeSessionId"
                  OnSessionSelect="HandleSessionSelect"
                  OnDeleteSession="HandleDeleteSession"
                  OnNewChat="HandleNewChat"
                  OnToggle="ToggleSidebar" />
-    </div> *@
+    </div>
 
     <main>
         <div class="top-row px-4">
             <div class="chatHeader">
                 <span class="logo">LocalRAG Chat</span>
+                <span style="margin-left: 20px; font-size: 12px; color: #666;">Sessions: @sessions.Count</span>
             </div>
         </div>
         <article class="content">
-            @Body
+            <CascadingValue Value="this">
+                @Body
+            </CascadingValue>
         </article>
     </main>
 </div>
@@ -34,7 +38,129 @@
 </div>
 
 @code {
-    // private List<Session> sessions = new();
-    // private string? activeSessionId;
-    // private bool loaded = false;
+    private List<Session> sessions = new();
+    private string? activeSessionId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logger.LogInformation("MainLayout OnInitializedAsync called");
+        await LoadSessionsAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Logger.LogInformation("MainLayout first render completed, reloading sessions");
+            // 最初のレンダリング後に再度セッションを読み込む（JavaScriptが利用可能になった後）
+            await Task.Delay(100); // JavaScriptの初期化を待つ
+            await LoadSessionsAsync();
+        }
+    }
+
+    private async Task LoadSessionsAsync()
+    {
+        Logger.LogInformation("LoadSessionsAsync called");
+        try
+        {
+            var loadedSessions = await SessionService.GetSessionsAsync();
+            Logger.LogInformation("Loaded {Count} sessions from SessionService", loadedSessions.Count);
+            
+            if (loadedSessions.Count > 0)
+            {
+                sessions = loadedSessions;
+                Logger.LogInformation("Sessions updated: {SessionIds}", string.Join(", ", sessions.Select(s => s.Id)));
+                StateHasChanged();
+                
+                // 最新のセッションを自動的にアクティブにする（オプション）
+                if (activeSessionId == null && sessions.Any())
+                {
+                    activeSessionId = sessions.First().Id;
+                    Logger.LogInformation("Auto-selected active session: {SessionId}", activeSessionId);
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                Logger.LogInformation("No sessions found");
+                sessions = new List<Session>();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "セッション読み込みエラー: {Message}", ex.Message);
+            sessions = new List<Session>();
+            StateHasChanged();
+        }
+    }
+
+    private Task HandleSessionSelect(string sessionId)
+    {
+        Logger.LogInformation("Session selected: {SessionId}", sessionId);
+        activeSessionId = sessionId;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleDeleteSession(string sessionId)
+    {
+        Logger.LogInformation("Delete session requested: {SessionId}", sessionId);
+        try
+        {
+            await SessionService.DeleteSessionAsync(sessionId);
+            Logger.LogInformation("Session deleted successfully: {SessionId}", sessionId);
+            
+            await LoadSessionsAsync();
+            
+            // 削除されたセッションがアクティブだった場合はリセット
+            if (activeSessionId == sessionId)
+            {
+                activeSessionId = null;
+                Logger.LogInformation("Active session reset due to deletion");
+            }
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "セッション削除エラー: {Message}", ex.Message);
+        }
+    }
+
+    private Task HandleNewChat()
+    {
+        Logger.LogInformation("New chat requested");
+        // 新規チャットでは、セッションを作成せず、アクティブセッションをnullにするだけ
+        activeSessionId = null;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task ToggleSidebar()
+    {
+        // サイドバーの表示/非表示切り替えロジック
+        await JSRuntime.InvokeVoidAsync("console.log", "Sidebar toggle");
+    }
+
+    // 外部からセッションリストを更新するためのメソッド
+    public async Task RefreshSessionsAsync()
+    {
+        Logger.LogInformation("RefreshSessionsAsync called externally");
+        await LoadSessionsAsync();
+    }
+
+    // 外部からアクティブセッションを設定するためのメソッド
+    public void SetActiveSession(string sessionId)
+    {
+        Logger.LogInformation("SetActiveSession called: {SessionId}", sessionId);
+        activeSessionId = sessionId;
+        StateHasChanged();
+    }
+
+    // アクティブセッションIDを取得するためのメソッド
+    public string? GetActiveSessionId()
+    {
+        return activeSessionId;
+    }
 }

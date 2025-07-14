@@ -1,4 +1,5 @@
 ﻿@using ragchat.Models
+@inject ILogger<NavMenu> Logger
 
 <div class="sidebarHeader">
     <MudIconButton Icon="@Icons.Material.Filled.Menu" 
@@ -12,19 +13,32 @@
                   Size="Size.Small" />
 </div>
 <div class="sidebarItems">
-    @if (Sessions != null)
+    @if (Sessions != null && Sessions.Any())
     {
         @foreach (var session in Sessions)
         {
             <div class="sidebarItem @(session.Id == ActiveSessionId ? "active" : "")"
-                 @onclick="@(() => OnSessionSelect.InvokeAsync(session.Id))">
+                 @onclick="@(() => HandleSessionClick(session.Id))">
                 <span class="label">@session.Label</span>
                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                              OnClick="@(() => OnDeleteSession.InvokeAsync(session.Id))"
+                              OnClick="@(() => HandleDeleteClick(session.Id))"
+                              OnClick:stopPropagation="true"
                               Color="Color.Inherit"
                               Size="Size.Small" />
             </div>
         }
+    }
+    else if (Sessions != null)
+    {
+        <div class="sidebarItem" style="color: #666; font-style: italic; padding: 10px;">
+            No sessions yet. Start a new chat!
+        </div>
+    }
+    else
+    {
+        <div class="sidebarItem" style="color: #666; font-style: italic; padding: 10px;">
+            Loading sessions...
+        </div>
     }
 </div>
 
@@ -35,5 +49,27 @@
     [Parameter] public EventCallback<string> OnDeleteSession { get; set; }
     [Parameter] public EventCallback OnNewChat { get; set; }
     [Parameter] public EventCallback OnToggle { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        Logger.LogInformation("NavMenu OnParametersSet called. Sessions count: {Count}", Sessions?.Count ?? 0);
+        if (Sessions != null && Sessions.Any())
+        {
+            Logger.LogInformation("Sessions: {SessionIds}", string.Join(", ", Sessions.Select(s => $"{s.Id}({s.Label})")));
+        }
+        Logger.LogInformation("ActiveSessionId: {ActiveSessionId}", ActiveSessionId ?? "null");
+    }
+
+    private async Task HandleSessionClick(string sessionId)
+    {
+        Logger.LogInformation("Session clicked: {SessionId}", sessionId);
+        await OnSessionSelect.InvokeAsync(sessionId);
+    }
+
+    private async Task HandleDeleteClick(string sessionId)
+    {
+        Logger.LogInformation("Delete button clicked for session: {SessionId}", sessionId);
+        await OnDeleteSession.InvokeAsync(sessionId);
+    }
 }
 
