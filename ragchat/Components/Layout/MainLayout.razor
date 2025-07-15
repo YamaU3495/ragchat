@@ -7,28 +7,9 @@
 @inject ILogger<MainLayout> Logger
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu Sessions="sessions"
-                 ActiveSessionId="activeSessionId"
-                 OnSessionSelect="HandleSessionSelect"
-                 OnDeleteSession="HandleDeleteSession"
-                 OnNewChat="HandleNewChat"
-                 OnToggle="ToggleSidebar" />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <div class="chatHeader">
-                <span class="logo">LocalRAG Chat</span>
-                <span style="margin-left: 20px; font-size: 12px; color: #666;">Sessions: @sessions.Count</span>
-            </div>
-        </div>
-        <article class="content">
-            <CascadingValue Value="this">
-                @Body
-            </CascadingValue>
-        </article>
-    </main>
+    <CascadingValue Value="this">
+        @Body
+    </CascadingValue>
 </div>
 
 <div id="blazor-error-ui">

@@ -1,31 +1,35 @@
 ﻿@using ragchat.Models
+@using ragchat.Services
 @inject ILogger<NavMenu> Logger
+@inject ISessionService SessionService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
 
 <div class="sidebarHeader">
-    <MudIconButton Icon="@Icons.Material.Filled.Menu" 
+    @* <MudIconButton Icon="@Icons.Material.Filled.Menu" 
                   OnClick="@OnToggle"
                   Color="Color.Inherit"
-                  Size="Size.Small" />
+                  Size="Size.Small" /> *@
     <div style="flex: 1;"></div>
     <MudIconButton Icon="@Icons.Material.Filled.Edit" 
-                  OnClick="@OnNewChat"
                   Color="Color.Inherit"
-                  Size="Size.Small" />
+                  Size="Size.Small" 
+                  Href="/chat" />
 </div>
 <div class="sidebarItems">
     @if (Sessions != null && Sessions.Any())
     {
         @foreach (var session in Sessions)
         {
-            <div class="sidebarItem @(session.Id == ActiveSessionId ? "active" : "")"
-                 @onclick="@(() => HandleSessionClick(session.Id))">
-                <span class="label">@session.Label</span>
-                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                              OnClick="@(() => HandleDeleteClick(session.Id))"
-                              OnClick:stopPropagation="true"
-                              Color="Color.Inherit"
-                              Size="Size.Small" />
-            </div>
+            <a class="sidebarItem" href="@($"/chat/{session.Id}")">
+                    <span class="label">@session.Label</span>
+                    @* <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                OnClick="@(() => HandleDeleteClick(session.Id))"
+                                OnClick:stopPropagation="true"
+                                Color="Color.Inherit"
+                                Size="Size.Small" /> *@
+            </a>
         }
     }
     else if (Sessions != null)
@@ -43,14 +47,21 @@
 </div>
 
 @code {
-    [Parameter] public List<Session>? Sessions { get; set; }
-    [Parameter] public string? ActiveSessionId { get; set; }
-    [Parameter] public EventCallback<string> OnSessionSelect { get; set; }
-    [Parameter] public EventCallback<string> OnDeleteSession { get; set; }
-    [Parameter] public EventCallback OnNewChat { get; set; }
-    [Parameter] public EventCallback OnToggle { get; set; }
+    
+    private List<Session>? Sessions { get; set; }
 
-    protected override void OnParametersSet()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Logger.LogInformation("NavMenu first render completed");
+            Sessions = await SessionService.GetSessionsAsync();
+            Logger.LogInformation("Sessions: {SessionIds}", string.Join(", ", Sessions.Select(s => $"{s.Id}({s.Label})")));
+            StateHasChanged();
+        }
+        await Task.CompletedTask;
+    }
+    @* protected override void OnParametersSet()
     {
         Logger.LogInformation("NavMenu OnParametersSet called. Sessions count: {Count}", Sessions?.Count ?? 0);
         if (Sessions != null && Sessions.Any())
@@ -58,18 +69,32 @@
             Logger.LogInformation("Sessions: {SessionIds}", string.Join(", ", Sessions.Select(s => $"{s.Id}({s.Label})")));
         }
         Logger.LogInformation("ActiveSessionId: {ActiveSessionId}", ActiveSessionId ?? "null");
-    }
+    } *@
 
     private async Task HandleSessionClick(string sessionId)
     {
         Logger.LogInformation("Session clicked: {SessionId}", sessionId);
-        await OnSessionSelect.InvokeAsync(sessionId);
+        Navigation.NavigateTo($"/chat/{sessionId}");
+        await Task.CompletedTask;
     }
 
     private async Task HandleDeleteClick(string sessionId)
     {
         Logger.LogInformation("Delete button clicked for session: {SessionId}", sessionId);
-        await OnDeleteSession.InvokeAsync(sessionId);
+        await Task.CompletedTask;
+    }
+
+    private async Task OnToggle()
+    {
+        Logger.LogInformation("Toggle button clicked");
+        await Task.CompletedTask;
+    }
+
+    private async Task OnNewChat()
+    {
+        Logger.LogInformation("New chat button clicked");
+        Navigation.NavigateTo("/chat");
+        await Task.CompletedTask;
     }
 }
 

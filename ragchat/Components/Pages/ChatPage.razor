@@ -1,4 +1,4 @@
-@page "/"
+@page "/chat/{sessionId?}"
 @using ragchat.Models
 @using ragchat.Services
 @using Markdig
@@ -12,13 +12,38 @@
 @using Microsoft.Extensions.Logging
 @inject ILogger<ChatPage> Logger
 
+
 <PageTitle>RAG Chat</PageTitle>
 
-<MudThemeProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
 
-@if (Environment.IsDevelopment())
+<div class="sidebar">
+    <NavMenu />
+</div>
+
+<main>
+    <div class="top-row">
+        <div class="chatHeader">
+            <span class="logo">LocalRAG Chat</span>
+        </div>
+    </div>
+    <article class="content">
+        <ChatArea Messages="messages"
+                ActiveSessionId="activeSessionId"
+                Loading="loading"
+                OnStartEdit="HandleStartEdit"
+                OnSaveEdit="HandleSaveEdit"
+                OnCancelEdit="HandleCancelEdit"
+                OnEditKeyDown="HandleEditKeyDown"
+                OnCopyMessage="HandleCopyMessage"
+                RenderMarkdown="RenderMarkdown" />
+        <ChatInput @bind-TextFieldValue="inputValue"
+                Loading="loading"
+                OnSend="HandleSend"
+                InputKeyDown="HandleInputKeyDown" />
+
+    </article>
+</main>
+@* @if (Environment.IsDevelopment())
 {
     <!-- デバッグ用Cookieテストパネル（開発環境のみ） -->
     <div style="position: fixed; top: 10px; right: 10px; z-index: 1000; background: white; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
@@ -27,23 +52,12 @@
         <MudButton OnClick="CheckAllCookies" Variant="Variant.Outlined" Size="Size.Small">Check All Cookies</MudButton>
         <MudButton OnClick="TestSessionService" Variant="Variant.Outlined" Size="Size.Small">Test Session Service</MudButton>
     </div>
-}
+} *@
 
-<ChatArea Messages="messages"
-          ActiveSessionId="activeSessionId"
-          Loading="loading"
-          OnStartEdit="HandleStartEdit"
-          OnSaveEdit="HandleSaveEdit"
-          OnCancelEdit="HandleCancelEdit"
-          OnEditKeyDown="HandleEditKeyDown"
-          OnCopyMessage="HandleCopyMessage"
-          RenderMarkdown="RenderMarkdown" />
-<ChatInput @bind-TextFieldValue="inputValue"
-           Loading="loading"
-           OnSend="HandleSend"
-           InputKeyDown="HandleInputKeyDown" />
 
 @code {
+    [Parameter] public string? SessionId { get; set; }
+    
     private List<Message> messages = new();
     private string inputValue = string.Empty;
     private string? activeSessionId;
@@ -118,11 +132,6 @@
             
             Snackbar.Add($"SessionService test completed. {sessions.Count} sessions found.", Severity.Success);
             
-            // MainLayoutのセッション一覧を更新
-            if (MainLayout != null)
-            {
-                await MainLayout.RefreshSessionsAsync();
-            }
         }
         catch (Exception ex)
         {
@@ -134,14 +143,26 @@
     protected override async Task OnInitializedAsync()
     {
         Logger.LogInformation("ChatPage OnInitializedAsync called");
-        // MainLayoutから現在のアクティブセッションIDを取得
-        if (MainLayout != null)
+        
+        // URLパラメータからSessionIdを取得
+        if (!string.IsNullOrEmpty(SessionId))
         {
-            activeSessionId = MainLayout.GetActiveSessionId();
-            Logger.LogInformation("Initial active session: {SessionId}", activeSessionId ?? "null");
-            if (!string.IsNullOrEmpty(activeSessionId))
+            Logger.LogInformation("SessionId received from URL: {SessionId}", SessionId);
+            activeSessionId = SessionId;
+            
+            
+            await LoadConversationHistory();
+        }
+        else
+        {
+            // URLパラメータがない場合はMainLayoutから取得
+            if (MainLayout != null)
             {
-                await LoadConversationHistory();
+                Logger.LogInformation("Initial active session from MainLayout: {SessionId}", activeSessionId ?? "null");
+                if (!string.IsNullOrEmpty(activeSessionId))
+                {
+                    await LoadConversationHistory();
+                }
             }
         }
     }
@@ -166,10 +187,20 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        // URLパラメータの変更を優先的に処理
+        if (!string.IsNullOrEmpty(SessionId) && SessionId != activeSessionId)
+        {
+            Logger.LogInformation("SessionId parameter changed to: {SessionId}", SessionId);
+            activeSessionId = SessionId;
+            
+            await LoadConversationHistory();
+            return;
+        }
+        
         // MainLayoutからアクティブセッションIDの変更を検知
         if (MainLayout != null)
         {
-            var newActiveSessionId = MainLayout.GetActiveSessionId();
+            var newActiveSessionId = "";
             if (newActiveSessionId != activeSessionId)
             {
                 Logger.LogInformation("Active session changed from {OldSessionId} to {NewSessionId}", activeSessionId ?? "null", newActiveSessionId ?? "null");
@@ -238,14 +269,6 @@
             {
                 Logger.LogInformation("New session created: {SessionId}, saving to cookie", activeSessionId);
                 await SaveSessionToCookie(currentInput);
-                
-                // MainLayoutのアクティブセッションを更新
-                if (MainLayout != null)
-                {
-                    MainLayout.SetActiveSession(activeSessionId);
-                    await MainLayout.RefreshSessionsAsync();
-                    Logger.LogInformation("MainLayout updated with new session");
-                }
             }
         }
         catch (Exception ex)

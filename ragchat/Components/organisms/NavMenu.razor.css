@@ -113,3 +113,18 @@
   border-bottom: 1px solid #222;
   background: #181818;
 }
+
+.label {
+    color: white;
+}
+
+/* サイドバー内のリンクのホバー色を無効化 */
+.sidebar a {
+    color: #fff !important;
+    text-decoration: none;
+}
+
+.sidebar a:hover {
+    color: #fff !important;
+    text-decoration: none;
+}
