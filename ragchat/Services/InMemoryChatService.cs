@@ -53,4 +53,13 @@ public class InMemoryChatService : IChatService
         }
         return Task.CompletedTask;
     }
+
+    public Task DeleteAllMessagesAsync(string sessionId)
+    {
+        if (_sessions.TryGetValue(sessionId, out var messages))
+        {
+            messages.Clear();
+        }
+        return Task.CompletedTask;
+    }
 } 

@@ -120,11 +120,15 @@
 
 /* サイドバー内のリンクのホバー色を無効化 */
 .sidebar a {
-    color: #fff !important;
+    color: #aaa !important;
     text-decoration: none;
 }
 
 .sidebar a:hover {
     color: #fff !important;
     text-decoration: none;
+}
+
+.sidebar a.active {
+    color: #fff !important;
 }

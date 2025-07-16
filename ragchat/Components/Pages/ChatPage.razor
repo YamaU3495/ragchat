@@ -1,4 +1,4 @@
-@page "/chat/{sessionId?}"
+@page "/"
 @using ragchat.Models
 @using ragchat.Services
 @using Markdig
@@ -17,7 +17,7 @@
 
 
 <div class="sidebar">
-    <NavMenu />
+    <NavMenu Sessions="Sessions" ActiveSessionId="activeSessionId" ActiveSessionIdChanged="HandleActiveSessionIdChanged" SessionsChanged="HandleSessionsChanged" MessagesCleared="HandleMessagesCleared" />
 </div>
 
 <main>
@@ -56,8 +56,7 @@
 
 
 @code {
-    [Parameter] public string? SessionId { get; set; }
-    
+    private List<Session>? Sessions { get; set; }
     private List<Message> messages = new();
     private string inputValue = string.Empty;
     private string? activeSessionId;
@@ -65,6 +64,14 @@
     private string bindValue = string.Empty;
 
     [CascadingParameter] public Components.Layout.MainLayout? MainLayout { get; set; }
+
+    private async Task HandleActiveSessionIdChanged(string sessionId)
+    {
+        Logger.LogInformation("HandleActiveSessionIdChanged called: {SessionId}", sessionId);
+        activeSessionId = sessionId;
+        await LoadConversationHistory();
+        StateHasChanged();
+    }
 
     // Cookie テスト用メソッド（開発環境のみ）
     private async Task TestCookieFunction()
@@ -144,32 +151,16 @@
     {
         Logger.LogInformation("ChatPage OnInitializedAsync called");
         
-        // URLパラメータからSessionIdを取得
-        if (!string.IsNullOrEmpty(SessionId))
-        {
-            Logger.LogInformation("SessionId received from URL: {SessionId}", SessionId);
-            activeSessionId = SessionId;
-            
-            
-            await LoadConversationHistory();
-        }
-        else
-        {
-            // URLパラメータがない場合はMainLayoutから取得
-            if (MainLayout != null)
-            {
-                Logger.LogInformation("Initial active session from MainLayout: {SessionId}", activeSessionId ?? "null");
-                if (!string.IsNullOrEmpty(activeSessionId))
-                {
-                    await LoadConversationHistory();
-                }
-            }
-        }
+        await Task.CompletedTask;
     }
 
     private async Task LoadConversationHistory()
     {
-        if (string.IsNullOrEmpty(activeSessionId)) return;
+        if (string.IsNullOrEmpty(activeSessionId)){
+            messages.Clear();
+            StateHasChanged();
+            return;
+        }
 
         Logger.LogInformation("Loading conversation history for session: {SessionId}", activeSessionId);
         try
@@ -185,39 +176,14 @@
         }
     }
 
-    protected override async Task OnParametersSetAsync()
+    @* protected override async Task OnParametersSetAsync()
     {
-        // URLパラメータの変更を優先的に処理
-        if (!string.IsNullOrEmpty(SessionId) && SessionId != activeSessionId)
+        if (!string.IsNullOrEmpty(activeSessionId))
         {
-            Logger.LogInformation("SessionId parameter changed to: {SessionId}", SessionId);
-            activeSessionId = SessionId;
-            
             await LoadConversationHistory();
             return;
         }
-        
-        // MainLayoutからアクティブセッションIDの変更を検知
-        if (MainLayout != null)
-        {
-            var newActiveSessionId = "";
-            if (newActiveSessionId != activeSessionId)
-            {
-                Logger.LogInformation("Active session changed from {OldSessionId} to {NewSessionId}", activeSessionId ?? "null", newActiveSessionId ?? "null");
-                activeSessionId = newActiveSessionId;
-                if (!string.IsNullOrEmpty(activeSessionId))
-                {
-                    await LoadConversationHistory();
-                }
-                else
-                {
-                    // 新規チャットの場合、メッセージをクリア
-                    messages.Clear();
-                    StateHasChanged();
-                }
-            }
-        }
-    }
+    } *@
 
     private async Task OnTextFieldValueChanged(string value)
     {
@@ -229,6 +195,10 @@
     {
         Logger.LogInformation($"HandleSend called! inputValue: '{inputValue}'");
         if (string.IsNullOrWhiteSpace(inputValue)) return;
+        
+        var currentInput = inputValue;
+        inputValue = string.Empty;
+        StateHasChanged();
 
         loading = true;
         var originalMessages = new List<Message>(messages);
@@ -237,14 +207,11 @@
         {
             var newMessage = new Message
             {
-                Content = inputValue,
+                Content = currentInput,
                 IsUser = true,
                 No = messages.Count + 1
             };
             messages.Add(newMessage);
-            var currentInput = inputValue;
-            inputValue = string.Empty;
-            StateHasChanged();
 
             // SessionIDはリモート側で作成されるため、最初のメッセージ送信時はnullを送信
             var sessionIdToSend = activeSessionId; // nullの場合はnullがそのまま送信される
@@ -260,7 +227,7 @@
             messages.Add(aiMessage);
 
             // セッションの処理
-            var isNewSession = activeSessionId == null;
+            var isNewSession = string.IsNullOrEmpty(activeSessionId);
             activeSessionId = response.SessionId; // リモート側で作成されたSessionIDを受け取る
             Logger.LogInformation("Received sessionId from response: {SessionId}, isNewSession: {IsNewSession}", activeSessionId, isNewSession);
 
@@ -269,6 +236,8 @@
             {
                 Logger.LogInformation("New session created: {SessionId}, saving to cookie", activeSessionId);
                 await SaveSessionToCookie(currentInput);
+                Sessions = await SessionService.GetSessionsAsync();
+                StateHasChanged();
             }
         }
         catch (Exception ex)
@@ -342,7 +311,7 @@
 
     private async Task HandleSaveEdit(Message message)
     {
-        if (activeSessionId == null) return;
+        if (string.IsNullOrEmpty(activeSessionId)) return;
 
         try
         {
@@ -386,6 +355,13 @@
         }
     }
 
+    private async Task HandleSessionsChanged(List<Session> sessions)
+    {
+        Sessions = sessions;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
     private string RenderMarkdown(string content)
     {
         try
@@ -402,5 +378,23 @@
                          .Replace("*", "<em>").Replace("*", "</em>")
                          .Replace("\n", "<br>");
         }
+    }
+    private async Task HandleMessagesCleared()
+    {
+        messages.Clear();
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Logger.LogInformation("ChatPage first render completed");
+            
+            Sessions = await SessionService.GetSessionsAsync();
+            
+            StateHasChanged();
+        }
+        await Task.CompletedTask;
     }
 } 

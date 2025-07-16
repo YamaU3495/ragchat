@@ -1,0 +1,102 @@
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<div class="auto-resize-textarea-container">
+    <textarea @ref="textAreaElement"
+              @bind="Value"
+              @bind:event="oninput"
+              @onkeydown="HandleKeyDown"
+              placeholder="@Placeholder"
+              class="auto-resize-textarea @CssClass"
+              disabled="@Disabled"
+              rows="1"></textarea>
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "";
+    [Parameter] public string CssClass { get; set; } = "";
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
+    [Parameter] public EventCallback<string> OnEnterPressed { get; set; }
+
+    private ElementReference textAreaElement;
+    private DotNetObjectReference<AutoResizeTextArea>? dotNetReference;
+    private IJSObjectReference? jsModule;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", 
+                "./Components/Atoms/AutoResizeTextArea.razor.js");
+            
+            dotNetReference = DotNetObjectReference.Create(this);
+            await jsModule.InvokeVoidAsync("init", textAreaElement, dotNetReference);
+        }
+        else if (jsModule is not null)
+        {
+            await jsModule.InvokeVoidAsync("resize", textAreaElement);
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        // Shift+Enterで改行、Enterのみで送信
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await OnEnterPressed.InvokeAsync(Value);
+            return;
+        }
+        await OnKeyDown.InvokeAsync(e);
+    }
+
+    [JSInvokable]
+    public async Task OnValueChanged(string newValue)
+    {
+        Value = newValue;
+        await ValueChanged.InvokeAsync(Value);
+        StateHasChanged();
+    }
+
+    public async Task FocusAsync()
+    {
+        if (jsModule is not null)
+        {
+            await jsModule.InvokeVoidAsync("focus", textAreaElement);
+        }
+    }
+
+    public async Task ClearAsync()
+    {
+        Value = string.Empty;
+        await ValueChanged.InvokeAsync(Value);
+        if (jsModule is not null)
+        {
+            await jsModule.InvokeVoidAsync("clear", textAreaElement);
+        }
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (jsModule is not null)
+            {
+                await jsModule.InvokeVoidAsync("dispose", textAreaElement);
+                await jsModule.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // SignalR回線が切断された場合は無視する
+            // これは正常なシャットダウンプロセスの一部
+        }
+        
+        dotNetReference?.Dispose();
+    }
+} 

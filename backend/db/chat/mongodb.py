@@ -50,7 +50,7 @@ class MongoChatRepo(IChatRepo):
         return messages
 
     async def clear_chat_messages(self, session_id: str) -> None:
-        """セッションIDに紐づくチャットメッセージを削除する"""
+        """指定したsession_idの全メッセージを削除する"""
         self.collection.delete_many({"session_id": session_id})
 
     async def delete_chat_message_by_no(self, session_id: str, no: int) -> None:

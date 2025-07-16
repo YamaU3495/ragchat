@@ -121,4 +121,18 @@ public class ApiChatService : IChatService
             throw new InvalidOperationException($"API通信エラー: {ex.Message}", ex);
         }
     }
+
+    public async Task DeleteAllMessagesAsync(string sessionId)
+    {
+        try
+        {
+            var response = await _httpClient.DeleteAsync($"/api/chat/messages/{sessionId}");
+            response.EnsureSuccessStatusCode();
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "API通信エラー: {Message}", ex.Message);
+            throw new InvalidOperationException($"API通信エラー: {ex.Message}", ex);
+        }
+    }
 } 

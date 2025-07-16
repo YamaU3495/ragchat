@@ -28,7 +28,7 @@ class InMemoryChatRepo(IChatRepo):
         return self._chat_messages.get(session_id, [])
 
     async def clear_chat_messages(self, session_id: str) -> None:
-        """セッションIDに紐づくチャットメッセージを削除する"""
+        """指定したsession_idの全メッセージを削除する"""
         if session_id in self._chat_messages:
             self._chat_messages[session_id] = []
 

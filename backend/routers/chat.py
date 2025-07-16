@@ -98,4 +98,21 @@ async def delete_chat_message(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
+        )
+
+@router.delete("/chat/messages/{session_id}")
+async def delete_all_chat_messages(
+    session_id: str,
+    chat_manager: ChatManager = Depends(get_chat_manager)
+):
+    """
+    指定したsession_idの全メッセージを削除する
+    """
+    try:
+        await chat_manager.chat_repository.clear_chat_messages(session_id)
+        return {"message": f"All messages for session_id={session_id} deleted", "session_id": session_id}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
         ) 

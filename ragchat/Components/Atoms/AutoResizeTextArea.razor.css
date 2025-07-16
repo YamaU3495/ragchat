@@ -1,0 +1,38 @@
+.auto-resize-textarea-container {
+    width: 100%;
+    position: relative;
+}
+
+.auto-resize-textarea {
+    width: 100%;
+    min-height: 40px;
+    max-height: 200px;
+    padding: 12px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+    resize: none;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+    background: #fff;
+    color: #333;
+}
+
+.auto-resize-textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.auto-resize-textarea:disabled {
+    background-color: #f5f5f5;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+.auto-resize-textarea::placeholder {
+    color: #999;
+} 

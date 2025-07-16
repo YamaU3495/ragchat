@@ -15,7 +15,7 @@ class IChatRepo(ABC):
 
     @abstractmethod
     async def clear_chat_messages(self, session_id: str) -> None:
-        """Clear all chat messages for a given session"""
+        """指定したsession_idの全メッセージを削除する"""
         pass
 
     @abstractmethod

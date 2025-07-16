@@ -1,18 +1,17 @@
 @using Microsoft.Extensions.Logging
+@using ragchat.Components.Atoms
 @inject ILogger<ChatInput> Logger
 @rendermode InteractiveServer
 
 <div class="chatInputArea">
     
-    <MudTextField  @ref="textField"
-                   @bind-Value="TextFieldValue"
-                   TextChanged="OnTextFieldValueChanged"
-                   OnKeyDown="OnInputKeyDown"
-                   Variant="Variant.Outlined"
-                   Lines="1"
-                   Placeholder="メッセージを入力..."
-                   Class="chatInputBox" 
-                   Immediate="true"/>
+    <AutoResizeTextArea @ref="textAreaRef"
+                        Value="@TextFieldValue"
+                        ValueChanged="OnTextFieldValueChanged"
+                        OnEnterPressed="OnSendMessage"
+                        OnKeyDown="OnInputKeyDown"
+                        Placeholder="メッセージを入力... (Shift+Enterで改行)"
+                        CssClass="chatInputBox" />
 
     <MudIconButton Icon="@Icons.Material.Filled.Send"
                   OnClick="@OnSend"
@@ -28,12 +27,11 @@
     [Parameter] public EventCallback<KeyboardEventArgs> InputKeyDown { get; set; }
     
     private bool IsDisabled => string.IsNullOrWhiteSpace(TextFieldValue);
-    private MudTextField<string>? textField;
+    private AutoResizeTextArea? textAreaRef;
 
     private async Task OnTextFieldValueChanged(string value)
     {
         await TextFieldValueChanged.InvokeAsync(value);
-        //await textField.FocusAsync();
     }
 
     private async Task OnInputKeyDown(KeyboardEventArgs e)
@@ -41,10 +39,23 @@
         await InputKeyDown.InvokeAsync(e);
     }
 
+    private async Task OnSendMessage(string message)
+    {
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            await OnSend.InvokeAsync();
+            // Clear the textarea after sending
+            if (textAreaRef is not null)
+            {
+                await textAreaRef.ClearAsync();
+            }
+        }
+    }
+
     override protected async Task OnAfterRenderAsync(bool firstRender)
     {
-        if(TextFieldValue.Length == 0 && textField != null){
-            await textField.FocusAsync();
+        if(TextFieldValue.Length == 0 && textAreaRef is not null){
+            await textAreaRef.FocusAsync();
         }
     }
 }

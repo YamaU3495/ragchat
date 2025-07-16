@@ -2,6 +2,7 @@
 @using ragchat.Services
 @inject ILogger<NavMenu> Logger
 @inject ISessionService SessionService
+@inject IChatService ChatService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
@@ -14,22 +15,21 @@
     <div style="flex: 1;"></div>
     <MudIconButton Icon="@Icons.Material.Filled.Edit" 
                   Color="Color.Inherit"
-                  Size="Size.Small" 
-                  Href="/chat" />
+                  Size="Size.Small"
+                  OnClick="@OnNewChat" />
 </div>
 <div class="sidebarItems">
     @if (Sessions != null && Sessions.Any())
     {
         @foreach (var session in Sessions)
         {
-            <a class="sidebarItem" href="@($"/chat/{session.Id}")">
+            <div class="sidebarItem @(session.Id == ActiveSessionId ? "active" : "")" onclick="@(() => HandleSessionClick(session.Id))">
                     <span class="label">@session.Label</span>
-                    @* <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                 OnClick="@(() => HandleDeleteClick(session.Id))"
-                                OnClick:stopPropagation="true"
                                 Color="Color.Inherit"
-                                Size="Size.Small" /> *@
-            </a>
+                                Size="Size.Small" />
+            </div>
         }
     }
     else if (Sessions != null)
@@ -47,41 +47,32 @@
 </div>
 
 @code {
-    
-    private List<Session>? Sessions { get; set; }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            Logger.LogInformation("NavMenu first render completed");
-            Sessions = await SessionService.GetSessionsAsync();
-            Logger.LogInformation("Sessions: {SessionIds}", string.Join(", ", Sessions.Select(s => $"{s.Id}({s.Label})")));
-            StateHasChanged();
-        }
-        await Task.CompletedTask;
-    }
-    @* protected override void OnParametersSet()
-    {
-        Logger.LogInformation("NavMenu OnParametersSet called. Sessions count: {Count}", Sessions?.Count ?? 0);
-        if (Sessions != null && Sessions.Any())
-        {
-            Logger.LogInformation("Sessions: {SessionIds}", string.Join(", ", Sessions.Select(s => $"{s.Id}({s.Label})")));
-        }
-        Logger.LogInformation("ActiveSessionId: {ActiveSessionId}", ActiveSessionId ?? "null");
-    } *@
+    [Parameter] public required List<Session> Sessions { get; set; }
+    [Parameter] public EventCallback<List<Session>> SessionsChanged { get; set; }
+    [Parameter] public required string ActiveSessionId { get; set; }
+    [Parameter] public EventCallback<string> ActiveSessionIdChanged { get; set; }
+    [Parameter] public EventCallback MessagesCleared { get; set; }
 
     private async Task HandleSessionClick(string sessionId)
     {
         Logger.LogInformation("Session clicked: {SessionId}", sessionId);
-        Navigation.NavigateTo($"/chat/{sessionId}");
-        await Task.CompletedTask;
+        await ActiveSessionIdChanged.InvokeAsync(sessionId);
     }
 
     private async Task HandleDeleteClick(string sessionId)
     {
         Logger.LogInformation("Delete button clicked for session: {SessionId}", sessionId);
-        await Task.CompletedTask;
+        if (Sessions != null){
+            await SessionService.DeleteSessionAsync(sessionId);
+            Sessions.RemoveAll(s => s.Id == sessionId);
+            await SessionsChanged.InvokeAsync(Sessions);
+        }
+        await ChatService.DeleteAllMessagesAsync(sessionId);
+        if (ActiveSessionId == sessionId){
+            await ActiveSessionIdChanged.InvokeAsync(string.Empty);
+            await MessagesCleared.InvokeAsync();
+        }
+        StateHasChanged();
     }
 
     private async Task OnToggle()
@@ -93,8 +84,8 @@
     private async Task OnNewChat()
     {
         Logger.LogInformation("New chat button clicked");
-        Navigation.NavigateTo("/chat");
-        await Task.CompletedTask;
+        await ActiveSessionIdChanged.InvokeAsync(string.Empty);
     }
+
 }
 

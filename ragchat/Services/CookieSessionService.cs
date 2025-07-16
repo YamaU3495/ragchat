@@ -25,6 +25,12 @@ public class CookieSessionService : ISessionService
             _logger.LogInformation("Cookie helper availability check: {Available}", result);
             return result;
         }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("JavaScript interop calls cannot be issued at this time"))
+        {
+            // This happens during prerendering when JavaScript interop is not available
+            _logger.LogDebug("JavaScript interop not available during prerendering, cookie helper unavailable");
+            return false;
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Cookie helper availability check failed");

@@ -63,4 +63,10 @@ public class ChatService : IChatService
         var response = await _httpClient.DeleteAsync($"{GetApiBaseUrl()}/chat/message/{sessionId}/{messageNo}");
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task DeleteAllMessagesAsync(string sessionId)
+    {
+        var response = await _httpClient.DeleteAsync($"{GetApiBaseUrl()}/chat/session/{sessionId}");
+        response.EnsureSuccessStatusCode();
+    }
 } 

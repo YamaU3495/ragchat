@@ -7,4 +7,5 @@ public interface IChatService
     Task<List<Message>> GetConversationHistoryAsync(string sessionId);
     Task EditMessageAsync(string sessionId, int messageIndex, string newContent);
     Task DeleteMessageAsync(string sessionId, int messageNo);
+    Task DeleteAllMessagesAsync(string sessionId);
 }
