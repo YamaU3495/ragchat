@@ -1,4 +1,5 @@
 @using ragchat.Models
+@inject IJSRuntime JSRuntime
 
 <div class="chatArea">
     <div class="chatAreaInner">
@@ -84,4 +85,13 @@
     [Parameter] public EventCallback<(KeyboardEventArgs, Message)> OnEditKeyDown { get; set; }
     [Parameter] public EventCallback<string> OnCopyMessage { get; set; }
     [Parameter] public Func<string, string>? RenderMarkdown { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // メッセージが更新された後にPrismJSでハイライトを実行
+        if (Messages != null && Messages.Any())
+        {
+            await JSRuntime.InvokeVoidAsync("Prism.highlightAll");
+        }
+    }
 } 
