@@ -69,8 +69,11 @@
         }
         await ChatService.DeleteAllMessagesAsync(sessionId);
         if (ActiveSessionId == sessionId){
+            Logger.LogInformation("Active session changed to empty");
             await ActiveSessionIdChanged.InvokeAsync(string.Empty);
             await MessagesCleared.InvokeAsync();
+        }else{
+            Logger.LogInformation("Active session is not the same as the session to be deleted. Active session: {ActiveSessionId}, Session to be deleted: {SessionId}", ActiveSessionId, sessionId);
         }
         StateHasChanged();
     }

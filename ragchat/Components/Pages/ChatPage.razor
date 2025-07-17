@@ -17,7 +17,7 @@
 
 
 <div class="sidebar">
-    <NavMenu Sessions="Sessions" ActiveSessionId="activeSessionId" ActiveSessionIdChanged="HandleActiveSessionIdChanged" SessionsChanged="HandleSessionsChanged" MessagesCleared="HandleMessagesCleared" />
+    <NavMenu Sessions="Sessions" ActiveSessionId="@activeSessionId" ActiveSessionIdChanged="HandleActiveSessionIdChanged" SessionsChanged="HandleSessionsChanged" MessagesCleared="HandleMessagesCleared" />
 </div>
 
 <main>
@@ -28,7 +28,7 @@
     </div>
     <article class="content">
         <ChatArea Messages="messages"
-                ActiveSessionId="activeSessionId"
+                ActiveSessionId="@activeSessionId"
                 Loading="loading"
                 OnStartEdit="HandleStartEdit"
                 OnSaveEdit="HandleSaveEdit"
@@ -59,7 +59,7 @@
     private List<Session>? Sessions { get; set; }
     private List<Message> messages = new();
     private string inputValue = string.Empty;
-    private string? activeSessionId;
+    private string activeSessionId = string.Empty;
     private bool loading = false;
     private string bindValue = string.Empty;
 
