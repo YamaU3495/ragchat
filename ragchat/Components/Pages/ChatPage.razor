@@ -3,6 +3,7 @@
 @using ragchat.Services
 @using Markdig
 @using ragchat.Components.organisms
+@using ragchat.Components.molecules
 @inject IChatService ChatService
 @inject ISessionService SessionService
 @inject IJSRuntime JSRuntime
@@ -12,6 +13,7 @@
 @using Microsoft.Extensions.Logging
 @inject ILogger<ChatPage> Logger
 
+@attribute [Authorize]
 
 <PageTitle>RAG Chat</PageTitle>
 
@@ -24,6 +26,9 @@
     <div class="top-row">
         <div class="chatHeader">
             <span class="logo">LocalRAG Chat</span>
+        </div>
+        <div class="nav-item px-3">
+            <LogInOrOut />
         </div>
     </div>
     <article class="content">

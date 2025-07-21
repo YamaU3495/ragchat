@@ -1,0 +1,35 @@
+@using System.Globalization
+
+<div class="image-button @CssClass" @onclick="HandleClick" @onclick:stopPropagation="true">
+    <span class="avatar-text">@GetInitials()</span>
+</div>
+
+@code {
+    [Parameter] public string? UserName { get; set; }
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    private string GetInitials()
+    {
+        if (string.IsNullOrWhiteSpace(UserName))
+            return "??";
+
+        var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+            return "??";
+
+        if (parts.Length == 1)
+            return parts[0].Length >= 2 ? parts[0].Substring(0, 2).ToUpper() : parts[0].ToUpper();
+
+        return (parts[0].Length > 0 ? parts[0][0] : '?').ToString().ToUpper() + 
+               (parts[1].Length > 0 ? parts[1][0] : '?').ToString().ToUpper();
+    }
+
+    private async Task HandleClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync();
+        }
+    }
+} 

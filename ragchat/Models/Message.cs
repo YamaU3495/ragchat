@@ -23,6 +23,7 @@ public class ChatRequest
 {
     public string Content { get; set; } = string.Empty;
     public string? SessionId { get; set; }
+    public string? UserId { get; set; }
 }
 
 public class ChatResponse

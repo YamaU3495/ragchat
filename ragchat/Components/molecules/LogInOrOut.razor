@@ -1,0 +1,49 @@
+@implements IDisposable
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@using ragchat.Components.molecules
+
+<div class="nav-item px-3">
+    <AuthorizeView>
+        <Authorized>
+            <UserMenuDialog 
+                UserName="@context.User.Identity?.Name"
+                UserEmail="@GetUserEmail(context.User)"
+                OnLogout="HandleLogout" />
+        </Authorized>
+        <NotAuthorized>
+            <a class="nav-link" href="authentication/login">
+                <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
+            </a>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = Navigation.Uri;
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = Navigation.Uri;
+        StateHasChanged();
+    }
+
+    private string? GetUserEmail(System.Security.Claims.ClaimsPrincipal user)
+    {
+        return user.FindFirst("email")?.Value ?? user.FindFirst("preferred_username")?.Value;
+    }
+
+    private async Task HandleLogout()
+    {
+        // ログアウト処理 - JavaScriptを使用してフォームを送信
+        await JSRuntime.InvokeVoidAsync("submitLogoutForm", currentUrl ?? "/");
+    }
+
+    public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
+}

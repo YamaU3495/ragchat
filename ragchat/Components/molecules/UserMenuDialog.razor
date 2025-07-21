@@ -1,0 +1,97 @@
+@using ragchat.Components.Atoms
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+@inject NavigationManager Navigation
+
+<div class="user-menu-container" @ref="menuContainer">
+    <ImageButton UserName="@UserName" OnClick="ToggleMenu" CssClass="user-avatar" />
+    
+    @if (IsMenuOpen)
+    {
+        <div class="user-menu-dropdown">
+            <div class="menu-header">
+                <div class="account-info">
+                    <ImageButton UserName="@UserName" CssClass="menu-avatar" />
+                    <div class="account-details">
+                        <div class="user-name">@UserName</div>
+                        <div class="account-type">個人アカウント</div>
+                        <div class="user-email">@UserEmail</div>
+                    </div>
+                    <div class="checkmark">
+                        <span class="bi bi-check-circle-fill"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="menu-actions">
+                <form action="authentication/logout" method="post">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                    <button type="submit" class="menu-item">
+                        <span class="bi bi-box-arrow-right"></span>
+                        <span>ログアウト</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string? UserName { get; set; }
+    [Parameter] public string? UserEmail { get; set; }
+    [Parameter] public EventCallback OnLogout { get; set; }
+
+    private string? currentUrl;
+
+    private bool IsMenuOpen { get; set; } = false;
+    private ElementReference menuContainer;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("addClickOutsideListener", menuContainer, DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public void OnClickOutside()
+    {
+        if (IsMenuOpen)
+        {
+            IsMenuOpen = false;
+            StateHasChanged();
+        }
+    }
+    protected override void OnInitialized()
+    {
+        currentUrl = Navigation.Uri;
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private void ToggleMenu()
+    {
+        IsMenuOpen = !IsMenuOpen;
+    }
+
+    private async Task HandleLogout()
+    {
+        IsMenuOpen = false;
+        if (OnLogout.HasDelegate)
+        {
+            await OnLogout.InvokeAsync();
+        }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = Navigation.Uri;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+} 
