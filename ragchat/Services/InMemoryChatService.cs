@@ -7,7 +7,7 @@ public class InMemoryChatService : IChatService
     private readonly Dictionary<string, List<Message>> _sessions = new();
     private int _sessionCounter = 1;
 
-    public Task<ChatResponse> SendMessageAsync(string content, string? sessionId = null)
+    public Task<ChatResponse> SendMessageAsync(string content, string userId, string? sessionId = null)
     {
         if (string.IsNullOrEmpty(sessionId) || !_sessions.ContainsKey(sessionId))
         {
@@ -28,14 +28,14 @@ public class InMemoryChatService : IChatService
         });
     }
 
-    public Task<List<Message>> GetConversationHistoryAsync(string sessionId)
+    public Task<List<Message>> GetConversationHistoryAsync(string userId, string sessionId)
     {
         if (_sessions.TryGetValue(sessionId, out var messages))
             return Task.FromResult(messages.ToList());
         return Task.FromResult(new List<Message>());
     }
 
-    public Task EditMessageAsync(string sessionId, int messageIndex, string newContent)
+    public Task EditMessageAsync(string userId, string sessionId, int messageIndex, string newContent)
     {
         if (_sessions.TryGetValue(sessionId, out var messages) && messageIndex >= 0 && messageIndex < messages.Count)
         {
@@ -44,7 +44,7 @@ public class InMemoryChatService : IChatService
         return Task.CompletedTask;
     }
 
-    public Task DeleteMessageAsync(string sessionId, int messageNo)
+    public Task DeleteMessageAsync(string userId, string sessionId, int messageNo)
     {
         if (_sessions.TryGetValue(sessionId, out var messages))
         {
@@ -54,7 +54,7 @@ public class InMemoryChatService : IChatService
         return Task.CompletedTask;
     }
 
-    public Task DeleteAllMessagesAsync(string sessionId)
+    public Task DeleteAllMessagesAsync(string userId, string sessionId)
     {
         if (_sessions.TryGetValue(sessionId, out var messages))
         {

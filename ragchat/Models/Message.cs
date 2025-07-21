@@ -23,7 +23,7 @@ public class ChatRequest
 {
     public string Content { get; set; } = string.Empty;
     public string? SessionId { get; set; }
-    public string? UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 }
 
 public class ChatResponse
@@ -37,6 +37,7 @@ public class EditMessageRequest
 {
     public int MessageIndex { get; set; }
     public string NewContent { get; set; } = string.Empty;
+    public string? UserId { get; set; }
 }
 
 public class ConversationHistory
@@ -49,6 +50,7 @@ public class ApiChatMessage
 {
     public string Content { get; set; } = string.Empty;
     public string? SessionId { get; set; }
+    public string? UserId { get; set; }
 }
 
 public class ApiChatResponse

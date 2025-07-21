@@ -76,9 +76,9 @@ class ChatManager:
             | container.llm()
         )
 
-    async def _load_messages(self, session_id: str) -> List[BaseMessage]:
+    async def _load_messages(self, user_id: str, session_id: str) -> List[BaseMessage]:
         """Load messages from database for a session"""
-        db_messages = await self.chat_repository.get_chat_messages(session_id)
+        db_messages = await self.chat_repository.get_chat_messages(user_id, session_id)
         messages = []
         for msg in db_messages:
             if msg.role == "user":
@@ -87,20 +87,20 @@ class ChatManager:
                 messages.append(AIMessage(content=msg.content))
         return messages
 
-    async def _save_messages(self, session_id: str, messages: List[BaseMessage]) -> List[ChatMessage]:
+    async def _save_messages(self, user_id: str, session_id: str, messages: List[BaseMessage]) -> List[ChatMessage]:
         """Save messages to database for a session"""
-        self.logger.info(f"Saving messages for session {session_id}")
+        self.logger.info(f"Saving messages for user {user_id}, session {session_id}")
         self.logger.info(f"Messages count: {len(messages)}")
         saved_messages = []
         for message in messages:
             if isinstance(message, HumanMessage):
-                saved_messages.append(await self.chat_repository.save_chat_message(session_id, ChatMessage(no=0, role="user", content=message.content)))
+                saved_messages.append(await self.chat_repository.save_chat_message(user_id, session_id, ChatMessage(no=0, role="user", content=message.content)))
             elif isinstance(message, AIMessage):
-                saved_messages.append(await self.chat_repository.save_chat_message(session_id, ChatMessage(no=0, role="assistant", content=message.content)))
+                saved_messages.append(await self.chat_repository.save_chat_message(user_id, session_id, ChatMessage(no=0, role="assistant", content=message.content)))
         return saved_messages
 
     @traceable
-    async def get_response(self, message: str, session_id: str) -> List[ChatMessage]:
+    async def get_response(self, message: str, user_id: str, session_id: str) -> List[ChatMessage]:
         """
         Get a response from the LLM based on the input message.
         Returns:
@@ -108,14 +108,16 @@ class ChatManager:
         """
         if message == "":
             raise ValueError("message is empty")
+        if user_id == "":
+            raise ValueError("user_id is empty")
         if session_id == "":
             raise ValueError("session_id is empty")
 
         # メッセージ履歴を取得
         history = DatabaseHistory()
         # DBからメッセージを読み込む
-        self.logger.info(f"Loading messages for db with session_id: {session_id}")
-        messages = await self._load_messages(session_id)
+        self.logger.info(f"Loading messages for db with user_id: {user_id}, session_id: {session_id}")
+        messages = await self._load_messages(user_id, session_id)
         history.add_messages(messages)
         self.logger.info(f"Loaded {len(messages)} messages")
 
@@ -127,7 +129,7 @@ class ChatManager:
             input_messages_key="input",
             history_messages_key="history"
         )
-        self.logger.info(f"Invoking chain with history with session_id: {session_id}")
+        self.logger.info(f"Invoking chain with history with user_id: {user_id}, session_id: {session_id}")
         response = chain_with_history.invoke(
             {"input": message},
             config={"configurable": {"session_id": session_id}}
@@ -139,13 +141,14 @@ class ChatManager:
             HumanMessage(content=message), 
             AIMessage(content=response.content)
         ])
-        return await self._save_messages(session_id, current_messages.messages)
+        return await self._save_messages(user_id, session_id, current_messages.messages)
 
-    async def clear_memory(self, session_id: str = "default"):
+    async def clear_memory(self, user_id: str, session_id: str = "default"):
         """
         Clear the conversation memory for a specific session.
         
         Args:
+            user_id (str): User identifier
             session_id (str, optional): Session identifier
         """
-        await self.chat_repository.clear_chat_messages(session_id)
+        await self.chat_repository.clear_chat_messages(user_id, session_id)

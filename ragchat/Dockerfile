@@ -1,5 +1,5 @@
-# Use the official .NET 8.0 SDK image for building
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# Use the official .NET 9.0 SDK image for building
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -17,8 +17,8 @@ RUN dotnet build -c Release -o /app/build
 # Publish the application
 RUN dotnet publish -c Release -o /app/publish
 
-# Use the official .NET 8.0 ASP.NET Core runtime image for running
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+# Use the official .NET 9.0 ASP.NET Core runtime image for running
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 
 # Set the working directory
 WORKDIR /app

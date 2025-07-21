@@ -14,12 +14,13 @@
 @inject ILogger<ChatPage> Logger
 
 @attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>RAG Chat</PageTitle>
 
 
 <div class="sidebar">
-    <NavMenu Sessions="Sessions" ActiveSessionId="@activeSessionId" ActiveSessionIdChanged="HandleActiveSessionIdChanged" SessionsChanged="HandleSessionsChanged" MessagesCleared="HandleMessagesCleared" />
+    <NavMenu Sessions="Sessions" ActiveSessionId="@activeSessionId" ActiveSessionIdChanged="HandleActiveSessionIdChanged" SessionsChanged="HandleSessionsChanged" MessagesCleared="HandleMessagesCleared" UserId="@currentUserId" />
 </div>
 
 <main>
@@ -67,6 +68,8 @@
     private string activeSessionId = string.Empty;
     private bool loading = false;
     private string bindValue = string.Empty;
+    private string? currentUserId;
+
 
     [CascadingParameter] public Components.Layout.MainLayout? MainLayout { get; set; }
 
@@ -170,7 +173,11 @@
         Logger.LogInformation("Loading conversation history for session: {SessionId}", activeSessionId);
         try
         {
-            messages = await ChatService.GetConversationHistoryAsync(activeSessionId);
+            var userId = await GetCurrentUserId();
+            if (!string.IsNullOrEmpty(userId))
+            {
+                messages = await ChatService.GetConversationHistoryAsync(userId, activeSessionId);
+            }
             Logger.LogInformation("Loaded {Count} messages for session: {SessionId}", messages.Count, activeSessionId);
             StateHasChanged();
         }
@@ -221,7 +228,12 @@
             // SessionIDはリモート側で作成されるため、最初のメッセージ送信時はnullを送信
             var sessionIdToSend = activeSessionId; // nullの場合はnullがそのまま送信される
             Logger.LogInformation("Sending message with sessionId: {SessionId}", sessionIdToSend ?? "null");
-            var response = await ChatService.SendMessageAsync(currentInput, sessionIdToSend);
+            var userId = await GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new InvalidOperationException("User ID is required but not available");
+            }
+            var response = await ChatService.SendMessageAsync(currentInput, userId, sessionIdToSend);
             
             var aiMessage = new Message
             {
@@ -321,7 +333,11 @@
         try
         {
             var messageIndex = messages.IndexOf(message);
-            await ChatService.EditMessageAsync(activeSessionId, messageIndex, message.EditValue);
+            var userId = await GetCurrentUserId();
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await ChatService.EditMessageAsync(userId, activeSessionId, messageIndex, message.EditValue);
+            }
             message.Content = message.EditValue;
             message.IsEditing = false;
             StateHasChanged();
@@ -397,9 +413,20 @@
             Logger.LogInformation("ChatPage first render completed");
             
             Sessions = await SessionService.GetSessionsAsync();
+            currentUserId = await GetCurrentUserId();
             
             StateHasChanged();
         }
         await Task.CompletedTask;
+    }
+    private async Task<string?> GetCurrentUserId()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        
+        // ユーザーIDを取得（クレームから）
+        return user.FindFirst("sub")?.Value ?? 
+               user.FindFirst("nameidentifier")?.Value ?? 
+               user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
     }
 } 

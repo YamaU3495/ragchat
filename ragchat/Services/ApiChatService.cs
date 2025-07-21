@@ -23,13 +23,14 @@ public class ApiChatService : IChatService
         };
     }
 
-    public async Task<ChatResponse> SendMessageAsync(string content, string? sessionId = null)
+    public async Task<ChatResponse> SendMessageAsync(string content, string userId, string? sessionId = null)
     {
         try
         {
             var requestMessage = new ApiChatMessage
             {
                 Content = content,
+                UserId = userId,
                 SessionId = sessionId
             };
 
@@ -66,11 +67,11 @@ public class ApiChatService : IChatService
         }
     }
 
-    public async Task<List<Message>> GetConversationHistoryAsync(string sessionId)
+    public async Task<List<Message>> GetConversationHistoryAsync(string userId, string sessionId)
     {
         try
         {
-            var response = await _httpClient.GetAsync($"/api/chat/history/{sessionId}");
+            var response = await _httpClient.GetAsync($"/api/chat/history/{userId}/{sessionId}");
             response.EnsureSuccessStatusCode();
 
             var responseContent = await response.Content.ReadAsStringAsync();
@@ -100,19 +101,18 @@ public class ApiChatService : IChatService
         }
     }
 
-    public async Task EditMessageAsync(string sessionId, int messageIndex, string newContent)
+    public Task EditMessageAsync(string userId, string sessionId, int messageIndex, string newContent)
     {
-        // APIの仕様に編集機能がないため、削除して新しいメッセージを送信する
-        // この実装は簡易的なもので、実際のAPIが編集機能を提供する場合はその仕様に従って実装する
+        // APIの仕様に編集機能がないため、実装しない
         _logger.LogWarning("メッセージの編集は現在のAPIでは直接サポートされていません");
-        await Task.CompletedTask;
+        throw new NotImplementedException("Edit functionality is not supported by the API");
     }
 
-    public async Task DeleteMessageAsync(string sessionId, int messageNo)
+    public async Task DeleteMessageAsync(string userId, string sessionId, int messageNo)
     {
         try
         {
-            var response = await _httpClient.DeleteAsync($"/api/chat/message/{sessionId}/{messageNo}");
+            var response = await _httpClient.DeleteAsync($"/api/chat/message/{userId}/{sessionId}/{messageNo}");
             response.EnsureSuccessStatusCode();
         }
         catch (HttpRequestException ex)
@@ -122,11 +122,11 @@ public class ApiChatService : IChatService
         }
     }
 
-    public async Task DeleteAllMessagesAsync(string sessionId)
+    public async Task DeleteAllMessagesAsync(string userId, string sessionId)
     {
         try
         {
-            var response = await _httpClient.DeleteAsync($"/api/chat/messages/{sessionId}");
+            var response = await _httpClient.DeleteAsync($"/api/chat/messages/{userId}/{sessionId}");
             response.EnsureSuccessStatusCode();
         }
         catch (HttpRequestException ex)

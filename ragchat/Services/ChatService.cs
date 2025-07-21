@@ -26,11 +26,12 @@ public class ChatService : IChatService
         return !string.IsNullOrEmpty(port) ? $"{protocol}://{host}:{port}" : $"{protocol}://{host}";
     }
 
-    public async Task<ChatResponse> SendMessageAsync(string content, string? sessionId = null)
+    public async Task<ChatResponse> SendMessageAsync(string content, string userId, string? sessionId = null)
     {
         var request = new ChatRequest
         {
             Content = content,
+            UserId = userId,
             SessionId = sessionId
         };
         var response = await _httpClient.PostAsJsonAsync($"{GetApiBaseUrl()}/chat", request);
@@ -39,34 +40,29 @@ public class ChatService : IChatService
             ?? throw new InvalidOperationException("Failed to deserialize response");
     }
 
-    public async Task<List<Message>> GetConversationHistoryAsync(string sessionId)
+    public async Task<List<Message>> GetConversationHistoryAsync(string userId, string sessionId)
     {
-        var response = await _httpClient.GetAsync($"{GetApiBaseUrl()}/chat/history/{sessionId}");
+        var response = await _httpClient.GetAsync($"{GetApiBaseUrl()}/chat/history/{userId}/{sessionId}");
         response.EnsureSuccessStatusCode();
         var history = await response.Content.ReadFromJsonAsync<ConversationHistory>();
         return history?.Messages ?? new List<Message>();
     }
 
-    public async Task EditMessageAsync(string sessionId, int messageIndex, string newContent)
+    public Task EditMessageAsync(string userId, string sessionId, int messageIndex, string newContent)
     {
-        var request = new EditMessageRequest
-        {
-            MessageIndex = messageIndex,
-            NewContent = newContent
-        };
-        var response = await _httpClient.PostAsJsonAsync($"{GetApiBaseUrl()}/chat/edit/{sessionId}", request);
+        // APIの仕様に編集機能がないため、実装しない
+        throw new NotImplementedException("Edit functionality is not supported by the API");
+    }
+
+    public async Task DeleteMessageAsync(string userId, string sessionId, int messageNo)
+    {
+        var response = await _httpClient.DeleteAsync($"{GetApiBaseUrl()}/chat/message/{userId}/{sessionId}/{messageNo}");
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task DeleteMessageAsync(string sessionId, int messageNo)
+    public async Task DeleteAllMessagesAsync(string userId, string sessionId)
     {
-        var response = await _httpClient.DeleteAsync($"{GetApiBaseUrl()}/chat/message/{sessionId}/{messageNo}");
-        response.EnsureSuccessStatusCode();
-    }
-
-    public async Task DeleteAllMessagesAsync(string sessionId)
-    {
-        var response = await _httpClient.DeleteAsync($"{GetApiBaseUrl()}/chat/session/{sessionId}");
+        var response = await _httpClient.DeleteAsync($"{GetApiBaseUrl()}/chat/messages/{userId}/{sessionId}");
         response.EnsureSuccessStatusCode();
     }
 } 

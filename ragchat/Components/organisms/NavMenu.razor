@@ -52,6 +52,7 @@
     [Parameter] public required string ActiveSessionId { get; set; }
     [Parameter] public EventCallback<string> ActiveSessionIdChanged { get; set; }
     [Parameter] public EventCallback MessagesCleared { get; set; }
+    [Parameter] public string? UserId { get; set; }
 
     private async Task HandleSessionClick(string sessionId)
     {
@@ -67,7 +68,10 @@
             Sessions.RemoveAll(s => s.Id == sessionId);
             await SessionsChanged.InvokeAsync(Sessions);
         }
-        await ChatService.DeleteAllMessagesAsync(sessionId);
+        if (!string.IsNullOrEmpty(UserId))
+        {
+            await ChatService.DeleteAllMessagesAsync(UserId, sessionId);
+        }
         if (ActiveSessionId == sessionId){
             Logger.LogInformation("Active session changed to empty");
             await ActiveSessionIdChanged.InvokeAsync(string.Empty);
