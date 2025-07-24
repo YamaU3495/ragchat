@@ -82,7 +82,7 @@ builder.Services.AddAuthentication(KEYCLOAK_OIDC_SCHEME)
         // single-tenant apps, but it requires a custom IssuerValidator as shown 
         // in the comments below. 
 
-        oidcOptions.Authority = "http://localhost:8080/realms/ragchat";
+        oidcOptions.Authority = builder.Configuration["Authentication:Schemes:KeycloakOidc:Authority"] ?? "http://localhost:8080/realms/ragchat";
         // ........................................................................
 
         // ........................................................................
@@ -90,6 +90,14 @@ builder.Services.AddAuthentication(KEYCLOAK_OIDC_SCHEME)
         // the Client ID.
 
         oidcOptions.ClientId = "ragchat";
+        // ........................................................................
+
+        // ........................................................................
+        // Set the Client Secret for the app. This should be configured via
+        // environment variable Authentication__Schemes__KeycloakOidc__ClientSecret
+
+        // oidcOptions.ClientSecret = builder.Configuration["Authentication:Schemes:KeycloakOidc:ClientSecret"];
+        oidcOptions.ClientSecret = "WM4KSAy7Q9YMlF8lBsgOzIHoRadyUXk5";
         // ........................................................................
 
         // ........................................................................

@@ -184,6 +184,8 @@ embedding/output/
 
 mongo_data/
 
+keycloak-db/
+
 *.pem
 *.csr
 *.key
