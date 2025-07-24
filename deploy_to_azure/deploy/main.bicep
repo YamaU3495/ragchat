@@ -50,6 +50,13 @@ param azureEmbeddingEndpoint string
 @description('The Azure OpenAI Endpoint')
 param azureOpenAIEndpoint string
 
+@secure()
+@description('The Keycloak client secret')
+param keycloakClientSecret string
+
+@description('The Keycloak authority')
+param keycloakAuthority string
+
 // Container Apps Environment
 resource containerAppsEnv 'Microsoft.App/managedEnvironments@2025-02-02-preview' = {
   name: 'ragchat-env'
@@ -98,7 +105,12 @@ resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
         transport: 'http'
         allowInsecure: false
       }
-      secrets: []
+      secrets: [
+        {
+          name: 'keycloak-client-secret'
+          value: keycloakClientSecret
+        }
+      ]
     }
     template: {
       containers: [
@@ -141,6 +153,14 @@ resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
             { 
               name: 'ChatService__Type'
               value: 'Api'
+            }
+            {
+              name: 'Authentication__Schemes__KeycloakOidc__ClientSecret'
+              secretRef: 'keycloak-client-secret'
+            }
+            {
+              name: 'Authentication__Schemes__KeycloakOidc__Authority'
+              value: keycloakAuthority
             }
           ]
           resources: {

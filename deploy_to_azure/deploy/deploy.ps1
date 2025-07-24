@@ -21,7 +21,13 @@ param(
     [int]$RetryDelaySeconds = 30,
 
     [Parameter(Mandatory=$false)]
-    [string]$MongodbPassword
+    [string]$MongodbPassword,
+
+    [Parameter(Mandatory=$false)]
+    [string]$KeycloakClientSecret,
+
+    [Parameter(Mandatory=$false)]
+    [string]$KeycloakAuthority
 )
 
 # Check if Azure CLI is installed
@@ -128,7 +134,9 @@ az deployment group create `
         azureOpenAIApiKey=$azureOpenAIApiKey `
         azureEmbeddingEndpoint=$azureEmbeddingEndpoint `
         azureOpenAIEndpoint=$azureOpenAIEndpoint `
-        mongodbPassword=$MongodbPassword
+        mongodbPassword=$MongodbPassword `
+        keycloakClientSecret=$KeycloakClientSecret `
+        keycloakAuthority=$KeycloakAuthority
 
 if ($LASTEXITCODE -eq 0) {
     $success = $true

@@ -68,6 +68,34 @@ resource chromaNSG 'Microsoft.Network/networkSecurityGroups@2024-07-01' = {
           direction: 'Inbound'
         }
       }
+      {
+        name: 'AllowKeycloakFromContainerApps'
+        properties: {
+          description: 'Container AppsサブネットからのKeycloakサービス（8080番ポート）への接続を許可'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '8080'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 1300
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'AllowKeycloakFromContainerAppsHttps'
+        properties: {
+          description: 'Container AppsサブネットからのKeycloakサービス（443番ポート）への接続を許可'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '8443'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 1400
+          direction: 'Inbound'
+        }
+      }
     ]
   }
 }

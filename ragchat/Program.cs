@@ -147,6 +147,11 @@ builder.Services.AddAuthentication(KEYCLOAK_OIDC_SCHEME)
         
         // 開発環境用の設定(HTTPでも通信可能にするため)
         oidcOptions.RequireHttpsMetadata = false;
+
+        // 証明書の検証を行わない
+        var handler = new HttpClientHandler();
+        handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
+        oidcOptions.BackchannelHttpHandler = handler;
     })
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
 builder.Services.ConfigureCookieOidc(CookieAuthenticationDefaults.AuthenticationScheme, KEYCLOAK_OIDC_SCHEME);
