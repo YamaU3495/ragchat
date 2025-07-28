@@ -105,8 +105,8 @@ builder.Services.AddAuthentication(KEYCLOAK_OIDC_SCHEME)
         // Set the Client Secret for the app. This should be configured via
         // environment variable Authentication__Schemes__KeycloakOidc__ClientSecret
 
-        // oidcOptions.ClientSecret = builder.Configuration["Authentication:Schemes:KeycloakOidc:ClientSecret"];
-        oidcOptions.ClientSecret = "WM4KSAy7Q9YMlF8lBsgOzIHoRadyUXk5";
+        oidcOptions.ClientSecret = builder.Configuration["Authentication:Schemes:KeycloakOidc:ClientSecret"];
+        // oidcOptions.ClientSecret = "WM4KSAy7Q9YMlF8lBsgOzIHoRadyUXk5";
         // ........................................................................
 
         // ........................................................................
