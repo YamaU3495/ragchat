@@ -106,7 +106,6 @@ builder.Services.AddAuthentication(KEYCLOAK_OIDC_SCHEME)
         // environment variable Authentication__Schemes__KeycloakOidc__ClientSecret
 
         oidcOptions.ClientSecret = builder.Configuration["Authentication:Schemes:KeycloakOidc:ClientSecret"];
-        // oidcOptions.ClientSecret = "WM4KSAy7Q9YMlF8lBsgOzIHoRadyUXk5";
         // ........................................................................
 
         // ........................................................................
