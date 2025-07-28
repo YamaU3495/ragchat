@@ -162,13 +162,8 @@ resource frontendApp 'Microsoft.App/containerApps@2025-02-02-preview' = {
               name: 'Authentication__Schemes__KeycloakOidc__Authority'
               value: keycloakAuthority
             }
-            { name: 'ASPNETCORE_ENVIRONMENT'
-              value: 'Production'
-            }
-            { name: 'ASPNETCORE_URLS'
-               value: 'http://+:80'
-            }
-            { name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED'
+            { 
+              name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED'
               value: 'true'
             }
           ]

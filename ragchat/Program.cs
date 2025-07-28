@@ -5,9 +5,18 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using BlazorWebAppOidc;
+using Microsoft.AspNetCore.HttpOverrides; // ← 追加
 
 const string KEYCLOAK_OIDC_SCHEME = "KeycloakOidc";
 var builder = WebApplication.CreateBuilder(args);
+
+// Forwarded Headers設定を追加
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Add services to the container.
 builder.Services.AddAuthentication(KEYCLOAK_OIDC_SCHEME)
