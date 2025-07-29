@@ -56,4 +56,12 @@ class MongoChatRepo(IChatRepo):
 
     async def delete_chat_message_by_no(self, user_id: str, session_id: str, no: int) -> None:
         """指定されたnoのメッセージを削除する"""
-        self.collection.delete_one({"user_id": user_id, "session_id": session_id, "no": no}) 
+        self.collection.delete_one({"user_id": user_id, "session_id": session_id, "no": no})
+
+    async def get_session_ids(self, user_id: str) -> List[str]:
+        """user_idに紐づくすべてのsession_idを取得する"""
+        self.logger.info(f"Getting session IDs for user {user_id}")
+        # user_idでフィルタして、重複のないsession_idを取得
+        session_ids = self.collection.distinct("session_id", {"user_id": user_id})
+        self.logger.info(f"Found {len(session_ids)} sessions for user {user_id}")
+        return session_ids 

@@ -41,4 +41,13 @@ class InMemoryChatRepo(IChatRepo):
     async def delete_chat_message_by_no(self, user_id: str, session_id: str, no: int) -> None:
         """指定されたnoのメッセージを削除する"""
         if user_id in self._chat_messages and session_id in self._chat_messages[user_id]:
-            self._chat_messages[user_id][session_id] = [msg for msg in self._chat_messages[user_id][session_id] if msg.no != no] 
+            self._chat_messages[user_id][session_id] = [msg for msg in self._chat_messages[user_id][session_id] if msg.no != no]
+
+    async def get_session_ids(self, user_id: str) -> List[str]:
+        """user_idに紐づくすべてのsession_idを取得する"""
+        self.logger.info(f"Getting session IDs for user {user_id}")
+        if user_id in self._chat_messages:
+            session_ids = list(self._chat_messages[user_id].keys())
+            self.logger.info(f"Found {len(session_ids)} sessions for user {user_id}")
+            return session_ids
+        return [] 

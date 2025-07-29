@@ -49,17 +49,6 @@
 
     </article>
 </main>
-@* @if (Environment.IsDevelopment())
-{
-    <!-- デバッグ用Cookieテストパネル（開発環境のみ） -->
-    <div style="position: fixed; top: 10px; right: 10px; z-index: 1000; background: white; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
-        <h6>Cookie Debug</h6>
-        <MudButton OnClick="TestCookieFunction" Variant="Variant.Outlined" Size="Size.Small">Test Cookie Functions</MudButton>
-        <MudButton OnClick="CheckAllCookies" Variant="Variant.Outlined" Size="Size.Small">Check All Cookies</MudButton>
-        <MudButton OnClick="TestSessionService" Variant="Variant.Outlined" Size="Size.Small">Test Session Service</MudButton>
-    </div>
-} *@
-
 
 @code {
     private List<Session>? Sessions { get; set; }
@@ -79,80 +68,6 @@
         activeSessionId = sessionId;
         await LoadConversationHistory();
         StateHasChanged();
-    }
-
-    // Cookie テスト用メソッド（開発環境のみ）
-    private async Task TestCookieFunction()
-    {
-        try
-        {
-            Logger.LogInformation("Testing cookie functions...");
-            
-            // JavaScript関数の存在確認
-            var isAvailable = await JSRuntime.InvokeAsync<bool>("eval", "typeof window.cookieHelper !== 'undefined'");
-            Logger.LogInformation("Cookie helper available: {Available}", isAvailable);
-            Snackbar.Add($"Cookie helper available: {isAvailable}", isAvailable ? Severity.Success : Severity.Error);
-            
-            if (isAvailable)
-            {
-                // テスト用Cookieを設定
-                await JSRuntime.InvokeVoidAsync("cookieHelper.setCookie", "test_cookie", "test_value", 1);
-                
-                // 設定したCookieを取得
-                var value = await JSRuntime.InvokeAsync<string>("cookieHelper.getCookie", "test_cookie");
-                Logger.LogInformation("Test cookie value: {Value}", value);
-                Snackbar.Add($"Test cookie value: {value}", !string.IsNullOrEmpty(value) ? Severity.Success : Severity.Error);
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Cookie test failed: {Message}", ex.Message);
-            Snackbar.Add($"Cookie test failed: {ex.Message}", Severity.Error);
-        }
-    }
-    
-    private async Task CheckAllCookies()
-    {
-        try
-        {
-            var allCookies = await JSRuntime.InvokeAsync<string>("eval", "document.cookie");
-            Logger.LogInformation("All browser cookies: {Cookies}", allCookies);
-            Snackbar.Add($"All cookies: {allCookies}", Severity.Info);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Failed to check cookies: {Message}", ex.Message);
-            Snackbar.Add($"Failed to check cookies: {ex.Message}", Severity.Error);
-        }
-    }
-    
-    private async Task TestSessionService()
-    {
-        try
-        {
-            Logger.LogInformation("Testing SessionService...");
-            
-            var testSession = new Session
-            {
-                Id = "test-session-" + DateTime.Now.Ticks,
-                CreatedAt = DateTime.Now,
-                Label = "Test Session"
-            };
-            
-            await SessionService.AddSessionAsync(testSession);
-            Logger.LogInformation("Test session added");
-            
-            var sessions = await SessionService.GetSessionsAsync();
-            Logger.LogInformation("Retrieved {Count} sessions", sessions.Count);
-            
-            Snackbar.Add($"SessionService test completed. {sessions.Count} sessions found.", Severity.Success);
-            
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "SessionService test failed: {Message}", ex.Message);
-            Snackbar.Add($"SessionService test failed: {ex.Message}", Severity.Error);
-        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -187,15 +102,6 @@
             Snackbar.Add($"会話履歴の読み込みに失敗しました: {ex.Message}", Severity.Error);
         }
     }
-
-    @* protected override async Task OnParametersSetAsync()
-    {
-        if (!string.IsNullOrEmpty(activeSessionId))
-        {
-            await LoadConversationHistory();
-            return;
-        }
-    } *@
 
     private async Task OnTextFieldValueChanged(string value)
     {
@@ -248,11 +154,10 @@
             activeSessionId = response.SessionId; // リモート側で作成されたSessionIDを受け取る
             Logger.LogInformation("Received sessionId from response: {SessionId}, isNewSession: {IsNewSession}", activeSessionId, isNewSession);
 
-            // 新しいセッションの場合、Cookieに保存
+            // 新しいセッションの場合、セッション一覧を更新
             if (isNewSession && !string.IsNullOrEmpty(activeSessionId))
             {
-                Logger.LogInformation("New session created: {SessionId}, saving to cookie", activeSessionId);
-                await SaveSessionToCookie(currentInput);
+                Logger.LogInformation("New session created: {SessionId}, refreshing session list", activeSessionId);
                 Sessions = await SessionService.GetSessionsAsync();
                 StateHasChanged();
             }
@@ -268,43 +173,6 @@
             loading = false;
             StateHasChanged();
         }
-    }
-
-    private async Task SaveSessionToCookie(string firstMessage)
-    {
-        if (string.IsNullOrEmpty(activeSessionId)) return;
-
-        try
-        {
-            var session = new Session
-            {
-                Id = activeSessionId,
-                CreatedAt = DateTime.Now,
-                Label = GenerateSessionLabel(firstMessage)
-            };
-
-            Logger.LogInformation("Saving session to cookie: {SessionId}, Label: {Label}", session.Id, session.Label);
-            await SessionService.AddSessionAsync(session);
-            Logger.LogInformation("Session saved to cookie successfully");
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "セッションのCookie保存に失敗しました: {Message}", ex.Message);
-        }
-    }
-
-    private string GenerateSessionLabel(string firstMessage)
-    {
-        // 最初のメッセージから適切な長さのラベルを生成
-        const int maxLength = 30;
-        var cleanMessage = firstMessage.Trim().Replace("\n", " ").Replace("\r", "");
-        
-        if (cleanMessage.Length <= maxLength)
-        {
-            return cleanMessage;
-        }
-        
-        return cleanMessage.Substring(0, maxLength - 3) + "...";
     }
 
     private async Task HandleInputKeyDown(KeyboardEventArgs e)

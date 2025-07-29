@@ -1,6 +1,7 @@
 from azure.cosmos import CosmosClient
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from .interface import IChatRepo
+from .models import ChatMessage
 import os
 from typing import Optional, List, Dict, Any
 
@@ -16,6 +17,32 @@ class CosmosDBClient(IChatRepo):
         self.client = CosmosClient(self.endpoint, self.key)
         self.database = self.client.get_database_client(self.database_name)
         self.container = self.database.get_container_client(self.container_name)
+
+    # IChatRepoインターフェースの実装（まだ実装されていないメソッド）
+    async def save_chat_message(self, user_id: str, session_id: str, message: ChatMessage) -> ChatMessage:
+        """チャットメッセージを保存し、no割り当て済みのChatMessageを返す"""
+        # TODO: 実装が必要
+        raise NotImplementedError("This method needs to be implemented")
+
+    async def get_chat_messages(self, user_id: str, session_id: str) -> List[ChatMessage]:
+        """セッションIDに紐づくチャットメッセージを取得する"""
+        # TODO: 実装が必要
+        raise NotImplementedError("This method needs to be implemented")
+
+    async def clear_chat_messages(self, user_id: str, session_id: str) -> None:
+        """指定したsession_idの全メッセージを削除する"""
+        # TODO: 実装が必要
+        raise NotImplementedError("This method needs to be implemented")
+
+    async def delete_chat_message_by_no(self, user_id: str, session_id: str, no: int) -> None:
+        """指定されたnoのメッセージを削除する"""
+        # TODO: 実装が必要
+        raise NotImplementedError("This method needs to be implemented")
+
+    async def get_session_ids(self, user_id: str) -> List[str]:
+        """user_idに紐づくすべてのsession_idを取得する"""
+        # TODO: 実装が必要
+        raise NotImplementedError("This method needs to be implemented")
 
     def create_chat(self, chat_data: Dict[str, Any]) -> Dict[str, Any]:
         """

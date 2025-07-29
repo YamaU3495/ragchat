@@ -24,7 +24,7 @@
   justify-content: flex-start;
 }
 .messageBubble {
-  max-width: 70%;
+  max-width: 500px;
   padding: 16px 24px;
   border-radius: 20px;
   box-shadow: 0 2px 8px #0001;

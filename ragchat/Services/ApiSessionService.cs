@@ -2,6 +2,8 @@ using ragchat.Models;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http;
+using System.Linq;
 
 namespace ragchat.Services;
 
@@ -10,15 +12,17 @@ public class ApiSessionService : ISessionService
     private readonly HttpClient _httpClient;
     private readonly ILogger<ApiSessionService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     
     // API側でセッション管理がない場合の簡易実装（フォールバック）
     private readonly Dictionary<string, Session> _localSessions = new();
     private int _sessionCounter = 1;
 
-    public ApiSessionService(IHttpClientFactory httpClientFactory, ILogger<ApiSessionService> logger)
+    public ApiSessionService(IHttpClientFactory httpClientFactory, ILogger<ApiSessionService> logger, IHttpContextAccessor httpContextAccessor)
     {
         _httpClient = httpClientFactory.CreateClient("ApiClient");
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
         
         _jsonOptions = new JsonSerializerOptions
         {
@@ -27,24 +31,120 @@ public class ApiSessionService : ISessionService
         };
     }
 
-    public Task<List<Session>> GetSessionsAsync()
+    public async Task<List<Session>> GetSessionsAsync()
     {
         try
         {
-            // API側でセッション一覧取得APIがある場合はこちらを使用
-            // var response = await _httpClient.GetAsync("/api/sessions");
-            // response.EnsureSuccessStatusCode();
-            // var responseContent = await response.Content.ReadAsStringAsync();
-            // return JsonSerializer.Deserialize<List<Session>>(responseContent, _jsonOptions) ?? new List<Session>();
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("User ID not available, returning empty session list");
+                return new List<Session>();
+            }
+
+            _logger.LogInformation("Fetching sessions for user: {UserId}", userId);
+            var response = await _httpClient.GetAsync($"/api/chat/sessions/{userId}");
             
-            // API側でセッション管理がない場合の簡易実装
-            return Task.FromResult(_localSessions.Values.OrderByDescending(s => s.CreatedAt).ToList());
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("API response: {Response}", responseContent);
+                
+                var apiResponse = JsonSerializer.Deserialize<ApiSessionsResponse>(responseContent, _jsonOptions);
+                if (apiResponse?.SessionIds != null)
+                {
+                    // SessionIDのリストをSession オブジェクトのリストに変換
+                    var sessions = new List<Session>();
+                    foreach (var sessionId in apiResponse.SessionIds)
+                    {
+                        var label = await GenerateDefaultLabelAsync(userId, sessionId);
+                        sessions.Add(new Session
+                        {
+                            Id = sessionId,
+                            CreatedAt = DateTime.Now, // APIにはCreatedAtがないため現在時刻を設定
+                            Label = label
+                        });
+                    }
+                    
+                    var result = sessions.OrderByDescending(s => s.CreatedAt).ToList();
+                    _logger.LogInformation("Retrieved {Count} sessions from API", result.Count);
+                    return result;
+                }
+            }
+            else
+            {
+                _logger.LogWarning("API call failed with status: {StatusCode}", response.StatusCode);
+            }
+            
+            // APIから取得できない場合はローカルセッションを返す
+            _logger.LogInformation("Falling back to local sessions");
+            return _localSessions.Values.OrderByDescending(s => s.CreatedAt).ToList();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "セッション一覧取得エラー: {Message}", ex.Message);
-            return Task.FromResult(_localSessions.Values.OrderByDescending(s => s.CreatedAt).ToList());
+            return _localSessions.Values.OrderByDescending(s => s.CreatedAt).ToList();
         }
+    }
+
+    private string? GetCurrentUserId()
+    {
+        var context = _httpContextAccessor.HttpContext;
+        if (context?.User?.Identity?.IsAuthenticated == true)
+        {
+            var user = context.User;
+            return user.FindFirst("sub")?.Value ?? 
+                   user.FindFirst("nameidentifier")?.Value ?? 
+                   user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+        }
+        return null;
+    }
+
+    private async Task<string> GenerateDefaultLabelAsync(string userId, string sessionId)
+    {
+        try
+        {
+            // セッションのメッセージ履歴を取得
+            var response = await _httpClient.GetAsync($"/api/chat/history/{userId}/{sessionId}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var apiResponse = JsonSerializer.Deserialize<ApiChatHistoryResponse>(responseContent, _jsonOptions);
+                
+                if (apiResponse?.Messages != null)
+                {
+                    // No=1のユーザーメッセージを検索
+                    var firstUserMessage = apiResponse.Messages
+                        .Where(m => m.Role == "user" && m.No == 1)
+                        .FirstOrDefault();
+                    
+                    if (firstUserMessage != null && !string.IsNullOrEmpty(firstUserMessage.Content))
+                    {
+                        // メッセージの先頭8文字を取得（改行や空白を除去）
+                        var cleanContent = firstUserMessage.Content.Trim().Replace("\n", " ").Replace("\r", "");
+                        const int maxLength = 8;
+                        
+                        if (cleanContent.Length <= maxLength)
+                        {
+                            return cleanContent;
+                        }
+                        
+                        return cleanContent.Substring(0, maxLength);
+                    }
+                }
+            }
+            
+            _logger.LogWarning("Could not get message history for session {SessionId}, using fallback label", sessionId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting message history for label generation: {Message}", ex.Message);
+        }
+        
+        // フォールバック: セッションIDの最初の8文字を使用
+        var shortId = sessionId.Length > 8 ? sessionId.Substring(0, 8) : sessionId;
+        return $"Chat {shortId}";
     }
 
     public Task<string> CreateSessionAsync(string? label = null)

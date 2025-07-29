@@ -21,4 +21,9 @@ class IChatRepo(ABC):
     @abstractmethod
     async def delete_chat_message_by_no(self, user_id: str, session_id: str, no: int) -> None:
         """Delete a chat message by its no for a given session"""
+        pass
+
+    @abstractmethod
+    async def get_session_ids(self, user_id: str) -> List[str]:
+        """Get all session IDs for a given user"""
         pass 

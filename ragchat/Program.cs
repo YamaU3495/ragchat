@@ -178,6 +178,9 @@ builder.Services.AddMudServices();
 // Add HTTP client factory for API calls
 builder.Services.AddHttpClient();
 
+// Add HttpContextAccessor for accessing authentication context
+builder.Services.AddHttpContextAccessor();
+
 // Configure named HttpClient for API calls
 builder.Services.AddHttpClient("ApiClient", client =>
 {

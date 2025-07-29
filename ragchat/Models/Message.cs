@@ -73,4 +73,11 @@ public class ApiChatMessageHistory
     public int No { get; set; }
     public string Role { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
+}
+
+// APIセッション一覧取得のレスポンスモデル
+public class ApiSessionsResponse
+{
+    public List<string> SessionIds { get; set; } = new();
+    public string UserId { get; set; } = string.Empty;
 } 

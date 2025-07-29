@@ -24,6 +24,10 @@ class ChatHistoryResponse(BaseModel):
     messages: List[ChatMessage]
     session_id: str
 
+class SessionListResponse(BaseModel):
+    session_ids: List[str]
+    user_id: str
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
     message: Message,
@@ -46,6 +50,26 @@ async def chat(
             no=last_msgs[-1].no,
             role=last_msgs[-1].role,
             content=last_msgs[-1].content,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@router.get("/chat/sessions/{user_id}", response_model=SessionListResponse)
+async def get_user_sessions(
+    user_id: str,
+    chat_manager: ChatManager = Depends(get_chat_manager)
+):
+    """
+    Get all session IDs for the specified user.
+    """
+    try:
+        session_ids = await chat_manager.chat_repository.get_session_ids(user_id)
+        return SessionListResponse(
+            session_ids=session_ids,
+            user_id=user_id
         )
     except Exception as e:
         raise HTTPException(
