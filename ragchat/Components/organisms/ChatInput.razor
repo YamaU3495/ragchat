@@ -43,12 +43,25 @@
     {
         if (!string.IsNullOrWhiteSpace(message))
         {
-            await OnSend.InvokeAsync();
-            // Clear the textarea after sending
+            // メッセージ内容を一時保持
+            var messageToSend = message;
+            
+            // エンターキーが押された瞬間にテキストエリアをクリア
             if (textAreaRef is not null)
             {
                 await textAreaRef.ClearAsync();
             }
+            
+            // 実際のメッセージ内容をinputValueに設定してから送信
+            await TextFieldValueChanged.InvokeAsync(messageToSend);
+            StateHasChanged();
+            
+            // 送信処理を実行
+            await OnSend.InvokeAsync();
+            
+            // 送信後、inputValueを空にする
+            await TextFieldValueChanged.InvokeAsync(string.Empty);
+            StateHasChanged();
         }
     }
 

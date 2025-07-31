@@ -2,6 +2,7 @@
 @using Microsoft.JSInterop
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
+@inject ILogger<AutoResizeTextArea> Logger
 
 <div class="auto-resize-textarea-container">
     <textarea @ref="textAreaElement"
@@ -45,7 +46,8 @@
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
-        // Shift+Enterで改行、Enterのみで送信
+        Logger.LogInformation("AutoResizeTextArea:HandleKeyDown: {Key}, {ShiftKey}", e.Key, e.ShiftKey);
+        // Shift+Enterで改行、Enterのみで送信p
         if (e.Key == "Enter" && !e.ShiftKey)
         {
             await OnEnterPressed.InvokeAsync(Value);
