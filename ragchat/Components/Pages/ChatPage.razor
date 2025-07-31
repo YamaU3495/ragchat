@@ -109,12 +109,12 @@
         await Task.CompletedTask;
     }
 
-    private async Task HandleSend()
+    private async Task HandleSend(string messageContent)
     {
-        Logger.LogInformation($"HandleSend called! inputValue: '{inputValue}'");
-        if (string.IsNullOrWhiteSpace(inputValue)) return;
+        Logger.LogInformation($"HandleSend called! messageContent: '{messageContent}'");
+        if (string.IsNullOrWhiteSpace(messageContent)) return;
         
-        var currentInput = inputValue;
+        // inputValueを空にしてUIに反映
         inputValue = string.Empty;
         StateHasChanged();
 
@@ -123,13 +123,15 @@
         
         try
         {
+            // ユーザーメッセージを即座にChatAreaに表示
             var newMessage = new Message
             {
-                Content = currentInput,
+                Content = messageContent,
                 IsUser = true,
                 No = messages.Count + 1
             };
             messages.Add(newMessage);
+            StateHasChanged(); // ユーザーメッセージを即座に表示
 
             // SessionIDはリモート側で作成されるため、最初のメッセージ送信時はnullを送信
             var sessionIdToSend = activeSessionId; // nullの場合はnullがそのまま送信される
@@ -139,7 +141,7 @@
             {
                 throw new InvalidOperationException("User ID is required but not available");
             }
-            var response = await ChatService.SendMessageAsync(currentInput, userId, sessionIdToSend);
+            var response = await ChatService.SendMessageAsync(messageContent, userId, sessionIdToSend);
             
             var aiMessage = new Message
             {

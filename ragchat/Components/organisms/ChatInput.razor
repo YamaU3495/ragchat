@@ -14,7 +14,7 @@
                         CssClass="chatInputBox" />
 
     <MudIconButton Icon="@Icons.Material.Filled.Send"
-                  OnClick="@OnSend"
+                  OnClick="@OnSendButtonClick"
                   Disabled="@IsDisabled"
                   Color="Color.Primary" />
 </div>
@@ -23,7 +23,7 @@
     [Parameter] public string TextFieldValue { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> TextFieldValueChanged { get; set; }
     [Parameter] public bool Loading { get; set; }
-    [Parameter] public EventCallback OnSend { get; set; }
+    [Parameter] public EventCallback<string> OnSend { get; set; } // メッセージ内容を渡すように変更
     [Parameter] public EventCallback<KeyboardEventArgs> InputKeyDown { get; set; }
     
     private bool IsDisabled => string.IsNullOrWhiteSpace(TextFieldValue);
@@ -43,25 +43,40 @@
     {
         if (!string.IsNullOrWhiteSpace(message))
         {
-            // メッセージ内容を一時保持
-            var messageToSend = message;
-            
-            // エンターキーが押された瞬間にテキストエリアをクリア
+            // 送信瞬間にテキストエリアの表示をクリア
             if (textAreaRef is not null)
             {
                 await textAreaRef.ClearAsync();
             }
             
-            // 実際のメッセージ内容をinputValueに設定してから送信
-            await TextFieldValueChanged.InvokeAsync(messageToSend);
-            StateHasChanged();
-            
-            // 送信処理を実行
-            await OnSend.InvokeAsync();
-            
-            // 送信後、inputValueを空にする
+            // 親コンポーネントの値も即座に空にする
             await TextFieldValueChanged.InvokeAsync(string.Empty);
             StateHasChanged();
+            
+            // メッセージ内容を渡して送信処理を実行
+            await OnSend.InvokeAsync(message);
+        }
+    }
+
+    private async Task OnSendButtonClick()
+    {
+        // 送信ボタンクリック時の処理
+        if (!string.IsNullOrWhiteSpace(TextFieldValue))
+        {
+            var messageToSend = TextFieldValue;
+            
+            // テキストエリアをクリア
+            if (textAreaRef is not null)
+            {
+                await textAreaRef.ClearAsync();
+            }
+            
+            // 親コンポーネントの値を空にする
+            await TextFieldValueChanged.InvokeAsync(string.Empty);
+            StateHasChanged();
+            
+            // メッセージ内容を渡して送信処理を実行
+            await OnSend.InvokeAsync(messageToSend);
         }
     }
 

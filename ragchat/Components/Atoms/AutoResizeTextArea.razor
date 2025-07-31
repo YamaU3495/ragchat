@@ -6,9 +6,6 @@
 
 <div class="auto-resize-textarea-container">
     <textarea @ref="textAreaElement"
-              @bind="Value"
-              @bind:event="oninput"
-              @onkeydown="HandleKeyDown"
               placeholder="@Placeholder"
               class="auto-resize-textarea @CssClass"
               disabled="@Disabled"
@@ -27,6 +24,17 @@
     private ElementReference textAreaElement;
     private DotNetObjectReference<AutoResizeTextArea>? dotNetReference;
     private IJSObjectReference? jsModule;
+    private string _previousValue = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // 値が外部から変更された場合、JavaScript側にも反映
+        if (Value != _previousValue && jsModule is not null)
+        {
+            await jsModule.InvokeVoidAsync("setValue", textAreaElement, Value);
+            _previousValue = Value;
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -37,6 +45,13 @@
             
             dotNetReference = DotNetObjectReference.Create(this);
             await jsModule.InvokeVoidAsync("init", textAreaElement, dotNetReference);
+            
+            // 初期値を設定
+            if (!string.IsNullOrEmpty(Value))
+            {
+                await jsModule.InvokeVoidAsync("setValue", textAreaElement, Value);
+                _previousValue = Value;
+            }
         }
         else if (jsModule is not null)
         {
@@ -44,16 +59,36 @@
         }
     }
 
-    private async Task HandleKeyDown(KeyboardEventArgs e)
+    // JavaScript側からのキーイベント処理
+    [JSInvokable]
+    public async Task OnKeyDownFromJS(object keyEventArgs)
     {
-        Logger.LogInformation("AutoResizeTextArea:HandleKeyDown: {Key}, {ShiftKey}", e.Key, e.ShiftKey);
-        // Shift+Enterで改行、Enterのみで送信p
-        if (e.Key == "Enter" && !e.ShiftKey)
+        // JavaScriptからのキーイベントオブジェクトを処理
+        if (keyEventArgs is System.Text.Json.JsonElement jsonElement)
         {
-            await OnEnterPressed.InvokeAsync(Value);
-            return;
+            var key = jsonElement.GetProperty("key").GetString() ?? "";
+            var shiftKey = jsonElement.GetProperty("shiftKey").GetBoolean();
+            var ctrlKey = jsonElement.GetProperty("ctrlKey").GetBoolean();
+            var altKey = jsonElement.GetProperty("altKey").GetBoolean();
+            
+            var args = new KeyboardEventArgs
+            {
+                Key = key,
+                ShiftKey = shiftKey,
+                CtrlKey = ctrlKey,
+                AltKey = altKey
+            };
+            
+            await OnKeyDown.InvokeAsync(args);
         }
-        await OnKeyDown.InvokeAsync(e);
+    }
+
+    // JavaScript側からのEnterキー処理
+    [JSInvokable]
+    public async Task OnEnterPressedFromJS(string value)
+    {
+        Logger.LogInformation("AutoResizeTextArea:OnEnterPressedFromJS: {Value}", value);
+        await OnEnterPressed.InvokeAsync(value);
     }
 
     [JSInvokable]
@@ -81,6 +116,25 @@
             await jsModule.InvokeVoidAsync("clear", textAreaElement);
         }
         StateHasChanged();
+    }
+
+    public async Task SetValueAsync(string newValue)
+    {
+        Value = newValue;
+        if (jsModule is not null)
+        {
+            await jsModule.InvokeVoidAsync("setValue", textAreaElement, newValue);
+        }
+        StateHasChanged();
+    }
+
+    public async Task<string> GetValueAsync()
+    {
+        if (jsModule is not null)
+        {
+            return await jsModule.InvokeAsync<string>("getValue", textAreaElement);
+        }
+        return Value;
     }
 
     public async ValueTask DisposeAsync()
