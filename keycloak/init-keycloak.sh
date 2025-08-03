@@ -13,7 +13,7 @@ echo "Keycloak is ready. Getting admin token..."
 ADMIN_TOKEN=$(curl -s -X POST \
     -H "Content-Type: application/x-www-form-urlencoded" \
     -d "username=admin" \
-    -d "password=admin" \
+    -d "password=xxxxxxxxxxxxxxx" \
     -d "grant_type=password" \
     -d "client_id=admin-cli" \
     http://localhost:8080/realms/master/protocol/openid-connect/token | jq -r '.access_token')
@@ -72,7 +72,7 @@ curl -s -X POST \
         "lastName": "User",
         "credentials": [{
             "type": "password",
-            "value": "password",
+            "value": "xxxxxxxxxxxxxxxxxxxx",
             "temporary": false
         }]
     }' \

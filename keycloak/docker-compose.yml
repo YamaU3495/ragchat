@@ -1,0 +1,57 @@
+version: '3.8'
+
+networks:
+  ragchat-network:
+    driver: bridge
+
+services:
+  keycloak:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    environment:
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://keycloak-db:5432/keycloak
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=xxxxxxxxxxxxxx
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=xxxxxxxxxxxxxxx
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME_STRICT_HTTPS=false
+      - KC_HTTP_ENABLED=true
+      - KC_HTTP_RELATIVE_PATH=/
+      - KC_HOSTNAME=XXX.XXX.XXX.XXX
+      - KC_HOSTNAME_URL=http://XXX.XXX.XXX.XXX:8080
+    depends_on:
+      - keycloak-db
+    networks:
+      - ragchat-network
+
+  keycloak-init:
+    image: curlimages/curl:latest
+    depends_on:
+      - keycloak
+    environment:
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET:-ragchat-secret}
+    volumes:
+      - ./keycloak/init-keycloak.sh:/init-keycloak.sh:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["apk add --no-cache jq && chmod +x /init-keycloak.sh && /init-keycloak.sh"]
+    networks:
+      - ragchat-network
+
+  keycloak-db:
+    image: postgres:17
+    restart: always
+    shm_size: 128mb
+    volumes:
+      - ./keycloak-db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: xxxxxxxxxxxxxxxxxxx
+    networks:
+      - ragchat-network
