@@ -71,6 +71,8 @@ services:
 
   chroma:
     image: chromadb/chroma:1.0.12
+    ports:
+      - "8000:8000"
     environment:
       - ANONYMIZED_TELEMETRY=False
     volumes:

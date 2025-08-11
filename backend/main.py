@@ -6,13 +6,22 @@ import os
 from routers import chat
 from dotenv import load_dotenv
 from containers import Container
+from logging import getLogger
 
 # 環境変数の読み込み
 load_dotenv()
 
+# ロガーの初期化
+logger = getLogger("uvicorn.app")
+
 # DIコンテナの初期化と設定の読み込み
-container = Container()
-container.load_config()
+try:
+    container = Container()
+    container.load_config()
+    logger.info("Container initialized successfully")
+except Exception as e:
+    logger.error(f"Error initializing container: {str(e)}", exc_info=True)
+    raise
 
 app = FastAPI(
     title="LocalRAG API",
@@ -48,11 +57,19 @@ app.include_router(chat.router, prefix="/api", tags=["chat"])
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to LocalRAG API"}
+    try:
+        return {"message": "Welcome to LocalRAG API"}
+    except Exception as e:
+        logger.error(f"Error in root endpoint: {str(e)}", exc_info=True)
+        raise
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    try:
+        return {"status": "healthy"}
+    except Exception as e:
+        logger.error(f"Error in health_check endpoint: {str(e)}", exc_info=True)
+        raise
 
 if __name__ == "__main__":
     import uvicorn

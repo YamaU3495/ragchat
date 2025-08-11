@@ -5,8 +5,12 @@ from containers import Container
 import uuid
 from typing import List
 from db.chat.models import ChatMessage
+from logging import getLogger
 
 router = APIRouter()
+
+# ロガーの初期化
+logger = getLogger("uvicorn.app")
 
 def get_chat_manager(container: Container = Depends(lambda: Container())) -> ChatManager:
     return ChatManager(container)
@@ -52,6 +56,7 @@ async def chat(
             content=last_msgs[-1].content,
         )
     except Exception as e:
+        logger.error(f"Error in chat endpoint for user_id={message.user_id}, session_id={session_id}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
@@ -72,6 +77,7 @@ async def get_user_sessions(
             user_id=user_id
         )
     except Exception as e:
+        logger.error(f"Error in get_user_sessions endpoint for user_id={user_id}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
@@ -86,8 +92,15 @@ async def clear_chat(
     """
     Clear the chat history for the specified session.
     """
-    await chat_manager.clear_memory(user_id=user_id, session_id=session_id)
-    return {"message": "Chat history cleared", "user_id": user_id, "session_id": session_id}
+    try:
+        await chat_manager.clear_memory(user_id=user_id, session_id=session_id)
+        return {"message": "Chat history cleared", "user_id": user_id, "session_id": session_id}
+    except Exception as e:
+        logger.error(f"Error in clear_chat endpoint for user_id={user_id}, session_id={session_id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
 
 @router.get("/chat/history/{user_id}/{session_id}", response_model=ChatHistoryResponse)
 async def get_chat_history(
@@ -105,6 +118,7 @@ async def get_chat_history(
             session_id=session_id
         )
     except Exception as e:
+        logger.error(f"Error in get_chat_history endpoint for user_id={user_id}, session_id={session_id}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
@@ -124,6 +138,7 @@ async def delete_chat_message(
         await chat_manager.chat_repository.delete_chat_message_by_no(user_id, session_id, no)
         return {"message": f"Message no={no} deleted", "user_id": user_id, "session_id": session_id}
     except Exception as e:
+        logger.error(f"Error in delete_chat_message endpoint for user_id={user_id}, session_id={session_id}, no={no}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
@@ -142,6 +157,7 @@ async def delete_all_chat_messages(
         await chat_manager.chat_repository.clear_chat_messages(user_id, session_id)
         return {"message": f"All messages for user_id={user_id}, session_id={session_id} deleted", "user_id": user_id, "session_id": session_id}
     except Exception as e:
+        logger.error(f"Error in delete_all_chat_messages endpoint for user_id={user_id}, session_id={session_id}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)

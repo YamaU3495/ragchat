@@ -27,41 +27,66 @@ class MongoChatRepo(IChatRepo):
     async def save_chat_message(self, user_id: str, session_id: str, message: ChatMessage) -> ChatMessage:
         """チャットメッセージを保存し、no割り当て済みのChatMessageを返す"""
         self.logger.info(f"Saving chat message for user {user_id}, session {session_id}")
-        # noを自動付与
-        next_no = self.collection.count_documents({"user_id": user_id, "session_id": session_id}) + 1
-        self.collection.insert_one({
-            "user_id": user_id,
-            "session_id": session_id,
-            "no": next_no,
-            "role": message.role,
-            "content": message.content
-        })
-        count = self.collection.count_documents({"user_id": user_id, "session_id": session_id})
-        self.logger.info(f"Saved chat message for user {user_id}, session {session_id}")
-        self.logger.info(f"Chat messages count: {count}")
-        return ChatMessage(no=next_no, role=message.role, content=message.content)
+        try:
+            # noを自動付与
+            next_no = self.collection.count_documents({"user_id": user_id, "session_id": session_id}) + 1
+            self.collection.insert_one({
+                "user_id": user_id,
+                "session_id": session_id,
+                "no": next_no,
+                "role": message.role,
+                "content": message.content
+            })
+            count = self.collection.count_documents({"user_id": user_id, "session_id": session_id})
+            self.logger.info(f"Saved chat message for user {user_id}, session {session_id}")
+            self.logger.info(f"Chat messages count: {count}")
+            return ChatMessage(no=next_no, role=message.role, content=message.content)
+        except Exception as e:
+            self.logger.error(f"Error saving chat message for user_id={user_id}, session_id={session_id}, role={message.role}: {str(e)}", exc_info=True)
+            raise
 
     async def get_chat_messages(self, user_id: str, session_id: str) -> List[ChatMessage]:
         """セッションIDに紐づくチャットメッセージを取得する"""
         self.logger.info(f"Getting chat messages for user {user_id}, session {session_id}")
-        all_count = self.collection.count_documents({})
-        self.logger.info(f"Chat messages all count: {all_count}")
-        cursor = self.collection.find({"user_id": user_id, "session_id": session_id}, {"_id": 0, "no": 1, "role": 1, "content": 1}).sort("no", 1)
-        messages = [ChatMessage(**msg) for msg in cursor]
-        return messages
+        try:
+            all_count = self.collection.count_documents({})
+            self.logger.info(f"Chat messages all count: {all_count}")
+            cursor = self.collection.find({"user_id": user_id, "session_id": session_id}, {"_id": 0, "no": 1, "role": 1, "content": 1}).sort("no", 1)
+            messages = [ChatMessage(**msg) for msg in cursor]
+            return messages
+        except Exception as e:
+            self.logger.error(f"Error getting chat messages for user_id={user_id}, session_id={session_id}: {str(e)}", exc_info=True)
+            raise
 
     async def clear_chat_messages(self, user_id: str, session_id: str) -> None:
         """指定したsession_idの全メッセージを削除する"""
-        self.collection.delete_many({"user_id": user_id, "session_id": session_id})
+        try:
+            result = self.collection.delete_many({"user_id": user_id, "session_id": session_id})
+            self.logger.info(f"Cleared {result.deleted_count} messages for user_id={user_id}, session_id={session_id}")
+        except Exception as e:
+            self.logger.error(f"Error clearing chat messages for user_id={user_id}, session_id={session_id}: {str(e)}", exc_info=True)
+            raise
 
     async def delete_chat_message_by_no(self, user_id: str, session_id: str, no: int) -> None:
         """指定されたnoのメッセージを削除する"""
-        self.collection.delete_one({"user_id": user_id, "session_id": session_id, "no": no})
+        try:
+            result = self.collection.delete_one({"user_id": user_id, "session_id": session_id, "no": no})
+            if result.deleted_count == 0:
+                self.logger.warning(f"No message found to delete for user_id={user_id}, session_id={session_id}, no={no}")
+            else:
+                self.logger.info(f"Deleted message no={no} for user_id={user_id}, session_id={session_id}")
+        except Exception as e:
+            self.logger.error(f"Error deleting chat message for user_id={user_id}, session_id={session_id}, no={no}: {str(e)}", exc_info=True)
+            raise
 
     async def get_session_ids(self, user_id: str) -> List[str]:
         """user_idに紐づくすべてのsession_idを取得する"""
         self.logger.info(f"Getting session IDs for user {user_id}")
-        # user_idでフィルタして、重複のないsession_idを取得
-        session_ids = self.collection.distinct("session_id", {"user_id": user_id})
-        self.logger.info(f"Found {len(session_ids)} sessions for user {user_id}")
-        return session_ids 
+        try:
+            # user_idでフィルタして、重複のないsession_idを取得
+            session_ids = self.collection.distinct("session_id", {"user_id": user_id})
+            self.logger.info(f"Found {len(session_ids)} sessions for user {user_id}")
+            return session_ids
+        except Exception as e:
+            self.logger.error(f"Error getting session IDs for user_id={user_id}: {str(e)}", exc_info=True)
+            raise 
