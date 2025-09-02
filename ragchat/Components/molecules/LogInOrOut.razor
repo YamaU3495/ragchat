@@ -1,6 +1,5 @@
 @implements IDisposable
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime
 @using ragchat.Components.molecules
 
 <div class="nav-item px-3">
@@ -9,7 +8,7 @@
             <UserMenuDialog 
                 UserName="@context.User.Identity?.Name"
                 UserEmail="@GetUserEmail(context.User)"
-                OnLogout="HandleLogout" />
+                CurrentUrl="@currentUrl" />
         </Authorized>
         <NotAuthorized>
             <a class="nav-link" href="authentication/login">
@@ -37,12 +36,6 @@
     private string? GetUserEmail(System.Security.Claims.ClaimsPrincipal user)
     {
         return user.FindFirst("email")?.Value ?? user.FindFirst("preferred_username")?.Value;
-    }
-
-    private async Task HandleLogout()
-    {
-        // ログアウト処理 - JavaScriptを使用してフォームを送信
-        await JSRuntime.InvokeVoidAsync("submitLogoutForm", currentUrl ?? "/");
     }
 
     public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;

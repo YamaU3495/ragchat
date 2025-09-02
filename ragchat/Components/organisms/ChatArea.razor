@@ -15,7 +15,7 @@
                         </MudAvatar>
                     }
                     <div>
-                        <div class="messageBubble @(message.IsUser ? "user" : "ai")">
+                        <div class="messageBubble @(message.IsUser ? "user" : "ai") markdown-body">
                             @if (message.IsEditing)
                             {
                                 <div class="editContainer">

@@ -160,8 +160,57 @@ builder.Services.AddAuthentication(KEYCLOAK_OIDC_SCHEME)
         var handler = new HttpClientHandler();
         handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
         oidcOptions.BackchannelHttpHandler = handler;
+
+        // ログアウト処理の改善
+        oidcOptions.Events = new OpenIdConnectEvents
+        {
+            OnRemoteSignOut = context =>
+            {
+                // リモートログアウト時の処理
+                // セッションが既に期限切れの場合でもエラーを無視
+                context.Response.Redirect("/");
+                context.HandleResponse();
+                return Task.CompletedTask;
+            },
+            OnSignedOutCallbackRedirect = context =>
+            {
+                // ログアウトコールバック時の処理
+                context.Response.Redirect("/");
+                context.HandleResponse();
+                return Task.CompletedTask;
+            },
+            OnAuthenticationFailed = context =>
+            {
+                // 認証失敗時の処理（セッション期限切れなど）
+                if (context.Exception is Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectProtocolException)
+                {
+                    // セッション期限切れの場合はログイン画面にリダイレクト
+                    context.Response.Redirect("/authentication/login");
+                    context.HandleResponse();
+                }
+                return Task.CompletedTask;
+            }
+        };
     })
-    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, cookieOptions =>
+    {
+        // Cookie認証の設定を改善
+        cookieOptions.LoginPath = "/authentication/login";
+        cookieOptions.LogoutPath = "/authentication/logout";
+        cookieOptions.AccessDeniedPath = "/authentication/access-denied";
+        cookieOptions.ExpireTimeSpan = TimeSpan.FromHours(8); // セッション有効期限を8時間に設定
+        cookieOptions.SlidingExpiration = true; // スライディング有効期限を有効化
+        
+        // Cookieの詳細設定
+        cookieOptions.Cookie.SameSite = SameSiteMode.Lax; // SameSite属性を設定
+        cookieOptions.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // 開発環境ではHTTPでも動作
+        cookieOptions.Cookie.HttpOnly = true; // XSS攻撃を防ぐためHttpOnlyを有効化
+        cookieOptions.Cookie.IsEssential = true; // GDPR対応のためEssentialを設定
+        
+        // セッション管理の改善
+        cookieOptions.SessionStore = null; // セッションストアを使用しない（メモリ内で管理）
+        cookieOptions.Validate(); // 設定の検証
+    });
 builder.Services.ConfigureCookieOidc(CookieAuthenticationDefaults.AuthenticationScheme, KEYCLOAK_OIDC_SCHEME);
 
 builder.Services.AddAuthorization();

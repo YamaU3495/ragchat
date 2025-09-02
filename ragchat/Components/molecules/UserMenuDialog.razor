@@ -26,7 +26,7 @@
             <div class="menu-actions">
                 <form action="authentication/logout" method="post">
                     <AntiforgeryToken />
-                    <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                    <input type="hidden" name="ReturnUrl" value="@CurrentUrl" />
                     <button type="submit" class="menu-item">
                         <span class="bi bi-box-arrow-right"></span>
                         <span>ログアウト</span>
@@ -40,9 +40,7 @@
 @code {
     [Parameter] public string? UserName { get; set; }
     [Parameter] public string? UserEmail { get; set; }
-    [Parameter] public EventCallback OnLogout { get; set; }
-
-    private string? currentUrl;
+    [Parameter] public string? CurrentUrl { get; set; }
 
     private bool IsMenuOpen { get; set; } = false;
     private ElementReference menuContainer;
@@ -64,34 +62,14 @@
             StateHasChanged();
         }
     }
-    protected override void OnInitialized()
-    {
-        currentUrl = Navigation.Uri;
-        Navigation.LocationChanged += OnLocationChanged;
-    }
 
     private void ToggleMenu()
     {
         IsMenuOpen = !IsMenuOpen;
     }
 
-    private async Task HandleLogout()
-    {
-        IsMenuOpen = false;
-        if (OnLogout.HasDelegate)
-        {
-            await OnLogout.InvokeAsync();
-        }
-    }
-
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        currentUrl = Navigation.Uri;
-        StateHasChanged();
-    }
-
     public void Dispose()
     {
-        Navigation.LocationChanged -= OnLocationChanged;
+        // クリーンアップ処理（必要に応じて）
     }
 } 
