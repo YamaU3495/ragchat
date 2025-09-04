@@ -1,13 +1,3 @@
-.sidebar {
-    width: 260px;
-    background: #212121;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    min-width: 200px;
-}
-
 main {
     flex: 1; /* これで十分、heightは削除 */
     display: flex;

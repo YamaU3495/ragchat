@@ -48,10 +48,31 @@ public class ChatService : IChatService
         return history?.Messages ?? new List<Message>();
     }
 
-    public Task EditMessageAsync(string userId, string sessionId, int messageIndex, string newContent)
+    public async Task<ChatResponse> EditMessageAsync(string userId, string sessionId, int messageNo, string newContent)
     {
-        // APIの仕様に編集機能がないため、実装しない
-        throw new NotImplementedException("Edit functionality is not supported by the API");
+        var request = new ApiEditMessageRequest
+        {
+            Content = newContent,
+            UserId = userId,
+            SessionId = sessionId,
+            No = messageNo
+        };
+        
+        var response = await _httpClient.PostAsJsonAsync($"{GetApiBaseUrl()}/chat/edit", request);
+        response.EnsureSuccessStatusCode();
+        
+        var editResponse = await response.Content.ReadFromJsonAsync<ApiEditMessageResponse>();
+        if (editResponse == null)
+        {
+            throw new InvalidOperationException("Failed to deserialize edit response");
+        }
+        
+        return new ChatResponse
+        {
+            Content = editResponse.Content,
+            SessionId = editResponse.SessionId,
+            No = editResponse.No
+        };
     }
 
     public async Task DeleteMessageAsync(string userId, string sessionId, int messageNo)

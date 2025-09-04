@@ -19,9 +19,7 @@
 <PageTitle>RAG Chat</PageTitle>
 
 
-<div class="sidebar">
-    <NavMenu Sessions="Sessions" ActiveSessionId="@activeSessionId" ActiveSessionIdChanged="HandleActiveSessionIdChanged" SessionsChanged="HandleSessionsChanged" MessagesCleared="HandleMessagesCleared" UserId="@currentUserId" />
-</div>
+<NavMenu Sessions="Sessions" ActiveSessionId="@activeSessionId" ActiveSessionIdChanged="HandleActiveSessionIdChanged" SessionsChanged="HandleSessionsChanged" MessagesCleared="HandleMessagesCleared" UserId="@currentUserId" />
 
 <main>
     <div class="top-row">
@@ -200,21 +198,55 @@
     {
         if (string.IsNullOrEmpty(activeSessionId)) return;
 
+        var originalMessages = new List<Message>(messages);
+        
         try
         {
-            var messageIndex = messages.IndexOf(message);
             var userId = await GetCurrentUserId();
-            if (!string.IsNullOrEmpty(userId))
+            if (!string.IsNullOrEmpty(userId) && message.No.HasValue)
             {
-                await ChatService.EditMessageAsync(userId, activeSessionId, messageIndex, message.EditValue);
+                // 指定されたNo以降のメッセージを削除
+                messages.RemoveAll(m => m.No >= message.No);
+                Logger.LogInformation("指定されたNo以降のメッセージを削除");
+                
+                // メッセージを追加
+                message.Content = message.EditValue;
+                messages.Add(message);
+
+                // message.IsEditingをfalseにする
+                message.IsEditing = false;
+                
+                // loadingをtrueにする
+                loading = true;
+
+                // 画面を更新
+                StateHasChanged();
+                
+                // メッセージの編集履歴を保存し、AIのレスポンスを取得
+                var response = await ChatService.EditMessageAsync(userId, activeSessionId, message.No.Value, message.EditValue);
+                Logger.LogInformation("メッセージの編集が完了しました");
+
+                // AIのレスポンスを追加
+                var aiMessage = new Message
+                {
+                    Content = response.Content,
+                    IsUser = false,
+                    No = response.No
+                };
+                messages.Add(aiMessage);
+                loading = false;
+
+                StateHasChanged();
             }
-            message.Content = message.EditValue;
-            message.IsEditing = false;
-            StateHasChanged();
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "メッセージの編集に失敗しました: {Message}", ex.Message);
             Snackbar.Add($"メッセージの編集に失敗しました: {ex.Message}", Severity.Error);
+
+            messages = originalMessages;
+            loading = false;
+            StateHasChanged();
         }
     }
 

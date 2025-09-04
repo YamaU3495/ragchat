@@ -26,4 +26,9 @@ class IChatRepo(ABC):
     @abstractmethod
     async def get_session_ids(self, user_id: str) -> List[str]:
         """Get all session IDs for a given user"""
+        pass
+
+    @abstractmethod
+    async def delete_messages_from_no(self, user_id: str, session_id: str, no: int) -> None:
+        """指定されたno以降のメッセージを削除する"""
         pass 

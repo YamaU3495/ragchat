@@ -168,3 +168,49 @@ class ChatManager:
         except Exception as e:
             self.logger.error(f"Error in clear_memory for user_id={user_id}, session_id={session_id}: {str(e)}", exc_info=True)
             raise
+
+    @traceable
+    async def edit_message_and_get_response(self, message: str, user_id: str, session_id: str, no: int) -> ChatMessage:
+        """
+        指定されたNo以降の履歴を削除し、新しいメッセージを送信してレスポンスを取得する
+        
+        Args:
+            message (str): 新しいメッセージ内容
+            user_id (str): ユーザーID
+            session_id (str): セッションID
+            no (int): 削除開始するNo
+            
+        Returns:
+            ChatMessage: AIのレスポンスメッセージのみ
+        """
+        if message == "":
+            raise ValueError("message is empty")
+        if user_id == "":
+            raise ValueError("user_id is empty")
+        if session_id == "":
+            raise ValueError("session_id is empty")
+        if no < 1:
+            raise ValueError("no must be greater than 0")
+
+        try:
+            # 1. 指定されたNo以降の履歴を削除
+            self.logger.info(f"Deleting messages from no={no} for user_id={user_id}, session_id={session_id}")
+            await self.chat_repository.delete_messages_from_no(user_id, session_id, no)
+            
+            # 2. 新しいメッセージを送信
+            self.logger.info(f"Sending new message for user_id={user_id}, session_id={session_id}")
+            messages = await self.get_response(message, user_id, session_id)
+            
+            # 3. AIのレスポンス（最後のメッセージ）のみを返す
+            if not messages:
+                raise ValueError("No response received from AI")
+            
+            ai_response = messages[-1]  # 最後のメッセージ（AIのレスポンス）
+            if ai_response.role != "assistant":
+                raise ValueError("Expected assistant response but got different role")
+            
+            return ai_response
+            
+        except Exception as e:
+            self.logger.error(f"Error in edit_message_and_get_response for user_id={user_id}, session_id={session_id}, no={no}: {str(e)}", exc_info=True)
+            raise

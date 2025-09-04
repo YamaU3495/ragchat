@@ -304,7 +304,7 @@
 
 .markdown-body p {
   margin-top: 0;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
 }
 
 .markdown-body blockquote {
@@ -408,7 +408,7 @@
   outline: none;
 }
 
-.markdown-body p,
+/* .markdown-body p, */
 .markdown-body blockquote,
 .markdown-body ul,
 .markdown-body ol,
@@ -535,13 +535,13 @@
   margin-bottom: 0;
 }
 
-.markdown-body li>p {
+/* .markdown-body li>p {
   margin-top: 1rem;
 }
 
 .markdown-body li+li {
   margin-top: .25em;
-}
+} */
 
 .markdown-body dl {
   padding: 0;

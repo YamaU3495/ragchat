@@ -80,4 +80,21 @@ public class ApiSessionsResponse
 {
     public List<string> SessionIds { get; set; } = new();
     public string UserId { get; set; } = string.Empty;
+}
+
+// API編集メッセージリクエストモデル
+public class ApiEditMessageRequest
+{
+    public string Content { get; set; } = string.Empty;
+    public string UserId { get; set; } = string.Empty;
+    public string SessionId { get; set; } = string.Empty;
+    public int No { get; set; }
+}
+
+// API編集メッセージレスポンスモデル
+public class ApiEditMessageResponse
+{
+    public string Content { get; set; } = string.Empty;
+    public string SessionId { get; set; } = string.Empty;
+    public int No { get; set; }
 } 

@@ -32,6 +32,17 @@ class SessionListResponse(BaseModel):
     session_ids: List[str]
     user_id: str
 
+class EditMessageRequest(BaseModel):
+    content: str
+    user_id: str
+    session_id: str
+    no: int
+
+class EditMessageResponse(BaseModel):
+    content: str
+    session_id: str
+    no: int
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
     message: Message,
@@ -158,6 +169,37 @@ async def delete_all_chat_messages(
         return {"message": f"All messages for user_id={user_id}, session_id={session_id} deleted", "user_id": user_id, "session_id": session_id}
     except Exception as e:
         logger.error(f"Error in delete_all_chat_messages endpoint for user_id={user_id}, session_id={session_id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@router.post("/chat/edit", response_model=EditMessageResponse)
+async def edit_message(
+    request: EditMessageRequest,
+    chat_manager: ChatManager = Depends(get_chat_manager)
+):
+    """
+    指定されたNo以降の履歴を削除し、新しいメッセージを送信してレスポンスを取得する
+    
+    処理の流れ：
+    1. ユーザーID、セッションID、No以降の履歴を削除
+    2. メッセージ送信。AIのレスポンスのみを返却
+    """
+    try:
+        ai_response = await chat_manager.edit_message_and_get_response(
+            message=request.content,
+            user_id=request.user_id,
+            session_id=request.session_id,
+            no=request.no
+        )
+        return EditMessageResponse(
+            content=ai_response.content,
+            session_id=request.session_id,
+            no=ai_response.no
+        )
+    except Exception as e:
+        logger.error(f"Error in edit_message endpoint for user_id={request.user_id}, session_id={request.session_id}, no={request.no}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)

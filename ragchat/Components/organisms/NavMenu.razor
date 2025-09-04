@@ -6,44 +6,55 @@
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
-
-<div class="sidebarHeader">
-    @* <MudIconButton Icon="@Icons.Material.Filled.Menu" 
-                  OnClick="@OnToggle"
-                  Color="Color.Inherit"
-                  Size="Size.Small" /> *@
-    <div style="flex: 1;"></div>
-    <MudIconButton Icon="@Icons.Material.Filled.Edit" 
-                  Color="Color.Inherit"
-                  Size="Size.Small"
-                  OnClick="@OnNewChat" />
-</div>
-<div class="sidebarItems">
-    @if (Sessions != null && Sessions.Any())
-    {
-        @foreach (var session in Sessions)
+<div class="navmenu-main @(isMenuOpen ? "navmenu-main-open" : "navmenu-main-closed")">
+@if (isMenuOpen)
+{
+    <div class="sidebarHeader">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" 
+                    OnClick="@OnToggle"
+                    Color="Color.Inherit"
+                    Size="Size.Small" />
+        <div style="flex: 1;"></div>
+        <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                    Color="Color.Inherit"
+                    Size="Size.Small"
+                    OnClick="@OnNewChat" />
+    </div>
+    <div class="sidebarItems">
+        @if (Sessions != null && Sessions.Any())
         {
-            <div class="sidebarItem @(session.Id == ActiveSessionId ? "active" : "")" onclick="@(() => HandleSessionClick(session.Id))">
-                    <span class="label">@session.Label</span>
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                OnClick="@(() => HandleDeleteClick(session.Id))"
-                                Color="Color.Inherit"
-                                Size="Size.Small" />
+            @foreach (var session in Sessions)
+            {
+                <div class="sidebarItem @(session.Id == ActiveSessionId ? "active" : "")" onclick="@(() => HandleSessionClick(session.Id))">
+                        <span class="label">@session.Label</span>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                    OnClick="@(() => HandleDeleteClick(session.Id))"
+                                    Color="Color.Inherit"
+                                    Size="Size.Small" />
+                </div>
+            }
+        }
+        else if (Sessions != null)
+        {
+            <div class="sidebarItem" style="color: #666; font-style: italic; padding: 10px;">
+                No sessions yet. Start a new chat!
             </div>
         }
-    }
-    else if (Sessions != null)
-    {
-        <div class="sidebarItem" style="color: #666; font-style: italic; padding: 10px;">
-            No sessions yet. Start a new chat!
-        </div>
-    }
-    else
-    {
-        <div class="sidebarItem" style="color: #666; font-style: italic; padding: 10px;">
-            Loading sessions...
-        </div>
-    }
+        else
+        {
+            <div class="sidebarItem" style="color: #666; font-style: italic; padding: 10px;">
+                Loading sessions...
+            </div>
+        }
+    </div>
+}else{
+    <div class="sidebarHeader">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" 
+                        OnClick="@OnToggle"
+                        Color="Color.Inherit"
+                        Size="Size.Small" />
+    </div>
+}
 </div>
 
 @code {
@@ -53,6 +64,8 @@
     [Parameter] public EventCallback<string> ActiveSessionIdChanged { get; set; }
     [Parameter] public EventCallback MessagesCleared { get; set; }
     [Parameter] public string? UserId { get; set; }
+
+    private bool isMenuOpen = true;
 
     private async Task HandleSessionClick(string sessionId)
     {
@@ -85,6 +98,9 @@
     private async Task OnToggle()
     {
         Logger.LogInformation("Toggle button clicked");
+        isMenuOpen = !isMenuOpen;
+
+        StateHasChanged();
         await Task.CompletedTask;
     }
 

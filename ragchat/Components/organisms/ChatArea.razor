@@ -44,12 +44,12 @@
                                     <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
                                                   OnClick="@(() => OnCopyMessage.InvokeAsync(message.Content))"
                                                   Size="Size.Small" />
-                                    @* @if (message.IsUser && ActiveSessionId != null)
+                                    @if (message.IsUser && ActiveSessionId != null)
                                     {
                                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                       OnClick="@(() => OnStartEdit.InvokeAsync(message))"
                                                       Size="Size.Small" />
-                                    } *@
+                                    }
                                 </div>
                                 <div class="messageContent">
                                     @((MarkupString)(RenderMarkdown?.Invoke(message.Content) ?? message.Content))

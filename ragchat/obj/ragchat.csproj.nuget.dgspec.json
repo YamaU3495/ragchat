@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj": {}
+    "c:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj": {}
   },
   "projects": {
-    "C:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj": {
+    "c:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj",
+        "projectUniqueName": "c:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj",
         "projectName": "ragchat",
-        "projectPath": "C:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj",
+        "projectPath": "c:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj",
         "packagesPath": "C:\\Users\\yamaz\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\obj\\",
+        "outputPath": "c:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\yamaz\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -84,7 +84,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.302/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

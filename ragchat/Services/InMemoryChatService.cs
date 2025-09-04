@@ -35,13 +35,35 @@ public class InMemoryChatService : IChatService
         return Task.FromResult(new List<Message>());
     }
 
-    public Task EditMessageAsync(string userId, string sessionId, int messageIndex, string newContent)
+    public Task<ChatResponse> EditMessageAsync(string userId, string sessionId, int messageNo, string newContent)
     {
-        if (_sessions.TryGetValue(sessionId, out var messages) && messageIndex >= 0 && messageIndex < messages.Count)
+        if (_sessions.TryGetValue(sessionId, out var messages))
         {
-            messages[messageIndex].Content = newContent;
+            // 指定されたNo以降のメッセージを削除
+            messages.RemoveAll(m => m.No >= messageNo);
+            
+            // 新しいユーザーメッセージを追加
+            var userMsg = new Message { Content = newContent, IsUser = true, No = messageNo };
+            messages.Add(userMsg);
+            
+            // 簡易AI応答を追加
+            var aiMsg = new Message { Content = $"Echo: {newContent}", IsUser = false, No = messageNo + 1 };
+            messages.Add(aiMsg);
+            
+            return Task.FromResult(new ChatResponse
+            {
+                Content = aiMsg.Content,
+                SessionId = sessionId,
+                No = aiMsg.No ?? 0
+            });
         }
-        return Task.CompletedTask;
+        
+        return Task.FromResult(new ChatResponse
+        {
+            Content = "セッションが見つかりません",
+            SessionId = sessionId,
+            No = 0
+        });
     }
 
     public Task DeleteMessageAsync(string userId, string sessionId, int messageNo)

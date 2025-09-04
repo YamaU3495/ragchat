@@ -89,4 +89,17 @@ class MongoChatRepo(IChatRepo):
             return session_ids
         except Exception as e:
             self.logger.error(f"Error getting session IDs for user_id={user_id}: {str(e)}", exc_info=True)
+            raise
+
+    async def delete_messages_from_no(self, user_id: str, session_id: str, no: int) -> None:
+        """指定されたno以降のメッセージを削除する"""
+        try:
+            result = self.collection.delete_many({
+                "user_id": user_id, 
+                "session_id": session_id, 
+                "no": {"$gte": no}
+            })
+            self.logger.info(f"Deleted {result.deleted_count} messages from no={no} for user_id={user_id}, session_id={session_id}")
+        except Exception as e:
+            self.logger.error(f"Error deleting messages from no={no} for user_id={user_id}, session_id={session_id}: {str(e)}", exc_info=True)
             raise 

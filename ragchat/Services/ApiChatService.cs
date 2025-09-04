@@ -101,11 +101,49 @@ public class ApiChatService : IChatService
         }
     }
 
-    public Task EditMessageAsync(string userId, string sessionId, int messageIndex, string newContent)
+    public async Task<ChatResponse> EditMessageAsync(string userId, string sessionId, int messageNo, string newContent)
     {
-        // APIの仕様に編集機能がないため、実装しない
-        _logger.LogWarning("メッセージの編集は現在のAPIでは直接サポートされていません");
-        throw new NotImplementedException("Edit functionality is not supported by the API");
+        try
+        {
+            var requestMessage = new ApiEditMessageRequest
+            {
+                Content = newContent,
+                UserId = userId,
+                SessionId = sessionId,
+                No = messageNo
+            };
+
+            var json = JsonSerializer.Serialize(requestMessage, _jsonOptions);
+            var requestContent = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("/api/chat/edit", requestContent);
+            response.EnsureSuccessStatusCode();
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var apiResponse = JsonSerializer.Deserialize<ApiEditMessageResponse>(responseContent, _jsonOptions);
+
+            if (apiResponse == null)
+            {
+                throw new InvalidOperationException("API応答のデシリアライズに失敗しました");
+            }
+
+            return new ChatResponse
+            {
+                Content = apiResponse.Content,
+                SessionId = apiResponse.SessionId,
+                No = apiResponse.No
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "API通信エラー: {Message}", ex.Message);
+            throw new InvalidOperationException($"API通信エラー: {ex.Message}", ex);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "JSONデシリアライズエラー: {Message}", ex.Message);
+            throw new InvalidOperationException($"JSONデシリアライズエラー: {ex.Message}", ex);
+        }
     }
 
     public async Task DeleteMessageAsync(string userId, string sessionId, int messageNo)
