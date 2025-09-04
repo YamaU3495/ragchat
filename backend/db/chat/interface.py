@@ -1,6 +1,6 @@
 from typing import List
 from abc import ABC, abstractmethod
-from .models import ChatMessage
+from .models import ChatMessage, SessionTitle
 
 class IChatRepo(ABC):
     @abstractmethod
@@ -31,4 +31,19 @@ class IChatRepo(ABC):
     @abstractmethod
     async def delete_messages_from_no(self, user_id: str, session_id: str, no: int) -> None:
         """指定されたno以降のメッセージを削除する"""
+        pass
+
+    @abstractmethod
+    async def save_session_title(self, user_id: str, session_id: str, title: str) -> SessionTitle:
+        """セッションタイトルを保存する"""
+        pass
+
+    @abstractmethod
+    async def get_session_titles(self, user_id: str) -> List[SessionTitle]:
+        """ユーザーのセッションタイトル一覧を取得する"""
+        pass
+
+    @abstractmethod
+    async def update_session_title(self, user_id: str, session_id: str, title: str) -> SessionTitle:
+        """セッションタイトルを更新する"""
         pass 

@@ -11,6 +11,7 @@ from typing import List, Dict
 from langsmith import traceable
 from logging import getLogger
 from db.chat.models import ChatMessage
+from utils.title_generator import create_title_generation_chain, generate_title_from_message_with_llm
 
 class DatabaseHistory(BaseChatMessageHistory):
     def __init__(self, messages: List[BaseMessage] = None):
@@ -75,6 +76,9 @@ class ChatManager:
             | prompt
             | container.llm()
         )
+        
+        # タイトル生成チェーンの設定
+        self.title_chain = create_title_generation_chain(container.llm())
 
     async def _load_messages(self, user_id: str, session_id: str) -> List[BaseMessage]:
         """Load messages from database for a session"""
@@ -129,6 +133,13 @@ class ChatManager:
             messages = await self._load_messages(user_id, session_id)
             history.add_messages(messages)
             self.logger.info(f"Loaded {len(messages)} messages")
+
+            # 初回メッセージの場合（履歴が空）、タイトルを生成して保存
+            is_first_message = len(messages) == 0
+            if is_first_message:
+                title = generate_title_from_message_with_llm(message, self.title_chain)
+                self.logger.info(f"Generated title for new session: {title}")
+                await self.chat_repository.save_session_title(user_id, session_id, title)
 
             def get_memory(_):
                 return history

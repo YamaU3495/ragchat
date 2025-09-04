@@ -4,7 +4,7 @@ from chat import ChatManager
 from containers import Container
 import uuid
 from typing import List
-from db.chat.models import ChatMessage
+from db.chat.models import ChatMessage, SessionTitle
 from logging import getLogger
 
 router = APIRouter()
@@ -42,6 +42,16 @@ class EditMessageResponse(BaseModel):
     content: str
     session_id: str
     no: int
+
+class SessionTitleResponse(BaseModel):
+    session_id: str
+    title: str
+    created_at: str
+    updated_at: str
+
+class SessionTitlesListResponse(BaseModel):
+    user_id: str
+    sessions: List[SessionTitleResponse]
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
@@ -200,6 +210,38 @@ async def edit_message(
         )
     except Exception as e:
         logger.error(f"Error in edit_message endpoint for user_id={request.user_id}, session_id={request.session_id}, no={request.no}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@router.get("/chat/sessions/titles/{user_id}", response_model=SessionTitlesListResponse)
+async def get_user_session_titles(
+    user_id: str,
+    chat_manager: ChatManager = Depends(get_chat_manager)
+):
+    """
+    ユーザーのセッションタイトル一覧を取得する
+    """
+    try:
+        session_titles = await chat_manager.chat_repository.get_session_titles(user_id)
+        
+        # SessionTitleをSessionTitleResponseに変換
+        session_responses = []
+        for session_title in session_titles:
+            session_responses.append(SessionTitleResponse(
+                session_id=session_title.session_id,
+                title=session_title.title,
+                created_at=session_title.created_at.isoformat(),
+                updated_at=session_title.updated_at.isoformat()
+            ))
+        
+        return SessionTitlesListResponse(
+            user_id=user_id,
+            sessions=session_responses
+        )
+    except Exception as e:
+        logger.error(f"Error in get_user_session_titles endpoint for user_id={user_id}: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)

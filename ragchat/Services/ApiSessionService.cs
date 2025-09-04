@@ -253,4 +253,44 @@ public class ApiSessionService : ISessionService
             throw new InvalidOperationException($"セッションラベル更新エラー: {ex.Message}", ex);
         }
     }
+
+    public async Task<List<SessionTitle>> GetSessionTitlesAsync()
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("User ID not available, returning empty session titles list");
+                return new List<SessionTitle>();
+            }
+
+            _logger.LogInformation("Fetching session titles for user: {UserId}", userId);
+            var response = await _httpClient.GetAsync($"/api/chat/sessions/titles/{userId}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Session titles API response: {Response}", responseContent);
+                
+                var apiResponse = JsonSerializer.Deserialize<SessionTitlesListResponse>(responseContent, _jsonOptions);
+                if (apiResponse?.Sessions != null)
+                {
+                    _logger.LogInformation("Retrieved {Count} session titles from API", apiResponse.Sessions.Count);
+                    return apiResponse.Sessions;
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Session titles API call failed with status: {StatusCode}", response.StatusCode);
+            }
+            
+            return new List<SessionTitle>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "セッションタイトル一覧取得エラー: {Message}", ex.Message);
+            return new List<SessionTitle>();
+        }
+    }
 } 

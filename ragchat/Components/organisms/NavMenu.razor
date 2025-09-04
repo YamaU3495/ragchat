@@ -21,7 +21,20 @@
                     OnClick="@OnNewChat" />
     </div>
     <div class="sidebarItems">
-        @if (Sessions != null && Sessions.Any())
+        @if (SessionTitles != null && SessionTitles.Any())
+        {
+            @foreach (var sessionTitle in SessionTitles)
+            {
+                <div class="sidebarItem @(sessionTitle.SessionId == ActiveSessionId ? "active" : "")" onclick="@(() => HandleSessionClick(sessionTitle.SessionId))">
+                        <span class="label">@sessionTitle.Title</span>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                    OnClick="@(() => HandleDeleteClick(sessionTitle.SessionId))"
+                                    Color="Color.Inherit"
+                                    Size="Size.Small" />
+                </div>
+            }
+        }
+        else if (Sessions != null && Sessions.Any())
         {
             @foreach (var session in Sessions)
             {
@@ -59,6 +72,7 @@
 
 @code {
     [Parameter] public required List<Session> Sessions { get; set; }
+    [Parameter] public List<SessionTitle>? SessionTitles { get; set; }
     [Parameter] public EventCallback<List<Session>> SessionsChanged { get; set; }
     [Parameter] public required string ActiveSessionId { get; set; }
     [Parameter] public EventCallback<string> ActiveSessionIdChanged { get; set; }
@@ -109,6 +123,7 @@
         Logger.LogInformation("New chat button clicked");
         await ActiveSessionIdChanged.InvokeAsync(string.Empty);
     }
+
 
 }
 

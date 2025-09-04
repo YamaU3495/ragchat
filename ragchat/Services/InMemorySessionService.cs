@@ -50,4 +50,11 @@ public class InMemorySessionService : ISessionService
         }
         return Task.CompletedTask;
     }
+
+    public Task<List<SessionTitle>> GetSessionTitlesAsync()
+    {
+        // InMemorySessionServiceではセッションタイトル機能はサポートしていない
+        // 空のリストを返す
+        return Task.FromResult(new List<SessionTitle>());
+    }
 } 

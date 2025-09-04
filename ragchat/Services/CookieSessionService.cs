@@ -200,4 +200,21 @@ public class CookieSessionService : ISessionService
             _logger.LogError(ex, "セッションラベル更新エラー: {Message}", ex.Message);
         }
     }
+
+    public async Task<List<SessionTitle>> GetSessionTitlesAsync()
+    {
+        _logger.LogInformation("GetSessionTitlesAsync called");
+        try
+        {
+            // CookieSessionServiceではセッションタイトル機能はサポートしていない
+            // 空のリストを返す
+            _logger.LogWarning("Session titles not supported in CookieSessionService, returning empty list");
+            return new List<SessionTitle>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "セッションタイトル一覧取得エラー: {Message}", ex.Message);
+            return new List<SessionTitle>();
+        }
+    }
 } 

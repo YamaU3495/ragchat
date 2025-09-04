@@ -19,7 +19,7 @@
 <PageTitle>RAG Chat</PageTitle>
 
 
-<NavMenu Sessions="Sessions" ActiveSessionId="@activeSessionId" ActiveSessionIdChanged="HandleActiveSessionIdChanged" SessionsChanged="HandleSessionsChanged" MessagesCleared="HandleMessagesCleared" UserId="@currentUserId" />
+<NavMenu Sessions="Sessions" SessionTitles="SessionTitles" ActiveSessionId="@activeSessionId" ActiveSessionIdChanged="HandleActiveSessionIdChanged" SessionsChanged="HandleSessionsChanged" MessagesCleared="HandleMessagesCleared" UserId="@currentUserId" />
 
 <main>
     <div class="top-row">
@@ -50,13 +50,13 @@
 
 @code {
     private List<Session>? Sessions { get; set; }
+    private List<SessionTitle>? SessionTitles { get; set; }
     private List<Message> messages = new();
     private string inputValue = string.Empty;
     private string activeSessionId = string.Empty;
     private bool loading = false;
     private string bindValue = string.Empty;
     private string? currentUserId;
-
 
     [CascadingParameter] public Components.Layout.MainLayout? MainLayout { get; set; }
 
@@ -159,6 +159,8 @@
             {
                 Logger.LogInformation("New session created: {SessionId}, refreshing session list", activeSessionId);
                 Sessions = await SessionService.GetSessionsAsync();
+                // セッションタイトル一覧も更新
+                await LoadSessionTitles();
                 StateHasChanged();
             }
         }
@@ -317,6 +319,9 @@
             Sessions = await SessionService.GetSessionsAsync();
             currentUserId = await GetCurrentUserId();
             
+            // 初期表示時にセッションタイトルも読み込む
+            await LoadSessionTitles();
+            
             StateHasChanged();
         }
         await Task.CompletedTask;
@@ -330,5 +335,19 @@
         return user.FindFirst("sub")?.Value ?? 
                user.FindFirst("nameidentifier")?.Value ?? 
                user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+    }
+
+    private async Task LoadSessionTitles()
+    {
+        try
+        {
+            SessionTitles = await SessionService.GetSessionTitlesAsync();
+            Logger.LogInformation("Loaded {Count} session titles", SessionTitles?.Count ?? 0);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load session titles: {Message}", ex.Message);
+            SessionTitles = new List<SessionTitle>();
+        }
     }
 } 

@@ -97,4 +97,19 @@ public class ApiEditMessageResponse
     public string Content { get; set; } = string.Empty;
     public string SessionId { get; set; } = string.Empty;
     public int No { get; set; }
+}
+
+// セッションタイトル関連のモデル
+public class SessionTitle
+{
+    public string SessionId { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class SessionTitlesListResponse
+{
+    public string UserId { get; set; } = string.Empty;
+    public List<SessionTitle> Sessions { get; set; } = new();
 } 

@@ -10,4 +10,5 @@ public interface ISessionService
     Task DeleteSessionAsync(string sessionId);
     Task<Session?> GetSessionAsync(string sessionId);
     Task UpdateSessionLabelAsync(string sessionId, string label);
+    Task<List<SessionTitle>> GetSessionTitlesAsync();
 } 
