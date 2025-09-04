@@ -1,10 +1,11 @@
 @using ragchat.Models
+@using ragchat.Components.Atoms
 @inject IJSRuntime JSRuntime
 
 <div class="chatArea">
-    <div class="chatAreaInner">
-        @if (Messages != null)
-        {
+    @if (Messages != null && Messages.Any())
+    {
+        <div class="chatAreaInner">
             @foreach (var message in Messages)
             {
                 <div class="messageRow @(message.IsUser ? "user" : "ai")">
@@ -65,14 +66,37 @@
                     }
                 </div>
             }
-        }
-        @if (Loading)
-        {
-            <div class="loadingContainer">
-                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <div class="welcomeContainer">
+            <div class="welcomeMessageBefore"></div>
+            <div class="welcomeMessage">
+                <h2>なにか、質問してみましょう</h2>
             </div>
-        }
-    </div>
+            <div class="centerInputContainer">
+                <AutoResizeTextArea @ref="centerTextAreaRef"
+                                    Value="@centerInputValue"
+                                    ValueChanged="OnCenterInputValueChanged"
+                                    OnEnterPressed="OnCenterInputSendMessage"
+                                    OnKeyDown="OnCenterInputKeyDownHandler"
+                                    Placeholder="質問してみましょう"
+                                    CssClass="centerInputBox" />
+                <MudIconButton Icon="@Icons.Material.Filled.Send"
+                                OnClick="@OnCenterInputSendButtonClick"
+                                Disabled="@IsCenterInputDisabled"
+                                Color="Color.Primary"
+                                Class="centerSendButton" />
+            </div>
+        </div>
+    }
+    @if (Loading)
+    {
+        <div class="loadingContainer">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
 </div>
 
 @code {
@@ -85,6 +109,63 @@
     [Parameter] public EventCallback<(KeyboardEventArgs, Message)> OnEditKeyDown { get; set; }
     [Parameter] public EventCallback<string> OnCopyMessage { get; set; }
     [Parameter] public Func<string, string>? RenderMarkdown { get; set; }
+    [Parameter] public EventCallback<string> OnCenterInputSend { get; set; }
+    [Parameter] public EventCallback<KeyboardEventArgs> OnCenterInputKeyDown { get; set; }
+
+    private string centerInputValue = string.Empty;
+    private AutoResizeTextArea? centerTextAreaRef;
+    private bool IsCenterInputDisabled => string.IsNullOrWhiteSpace(centerInputValue);
+
+    private async Task OnCenterInputValueChanged(string value)
+    {
+        centerInputValue = value;
+        await Task.CompletedTask;
+    }
+
+    private async Task OnCenterInputSendMessage(string message)
+    {
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            // 送信瞬間にテキストエリアの表示をクリア
+            if (centerTextAreaRef is not null)
+            {
+                await centerTextAreaRef.ClearAsync();
+            }
+            
+            // 親コンポーネントの値も即座に空にする
+            centerInputValue = string.Empty;
+            StateHasChanged();
+            
+            // メッセージ内容を渡して送信処理を実行
+            await OnCenterInputSend.InvokeAsync(message);
+        }
+    }
+
+    private async Task OnCenterInputSendButtonClick()
+    {
+        if (!string.IsNullOrWhiteSpace(centerInputValue))
+        {
+            var messageToSend = centerInputValue;
+            
+            // テキストエリアをクリア
+            if (centerTextAreaRef is not null)
+            {
+                await centerTextAreaRef.ClearAsync();
+            }
+            
+            // 親コンポーネントの値を空にする
+            centerInputValue = string.Empty;
+            StateHasChanged();
+            
+            // メッセージ内容を渡して送信処理を実行
+            await OnCenterInputSend.InvokeAsync(messageToSend);
+        }
+    }
+
+    private async Task OnCenterInputKeyDownHandler(KeyboardEventArgs e)
+    {
+        await OnCenterInputKeyDown.InvokeAsync(e);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -92,6 +173,12 @@
         if (Messages != null && Messages.Any())
         {
             await JSRuntime.InvokeVoidAsync("Prism.highlightAll");
+        }
+        
+        // 新規チャットの場合は中央インプットにフォーカス
+        if ((Messages == null || !Messages.Any()) && centerTextAreaRef is not null)
+        {
+            await centerTextAreaRef.FocusAsync();
         }
     }
 } 

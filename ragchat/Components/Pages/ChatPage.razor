@@ -39,11 +39,16 @@
                 OnCancelEdit="HandleCancelEdit"
                 OnEditKeyDown="HandleEditKeyDown"
                 OnCopyMessage="HandleCopyMessage"
-                RenderMarkdown="RenderMarkdown" />
-        <ChatInput @bind-TextFieldValue="inputValue"
-                Loading="loading"
-                OnSend="HandleSend"
-                InputKeyDown="HandleInputKeyDown" />
+                RenderMarkdown="RenderMarkdown"
+                OnCenterInputSend="HandleSend"
+                OnCenterInputKeyDown="HandleInputKeyDown" />
+        @if (messages != null && messages.Any())
+        {
+            <ChatInput @bind-TextFieldValue="inputValue"
+                    Loading="loading"
+                    OnSend="HandleSend"
+                    InputKeyDown="HandleInputKeyDown" />
+        }
 
     </article>
 </main>

@@ -7,6 +7,8 @@
   gap: 12px;
   position: sticky;
   bottom: 0;
+  border-radius: 25px;
+  margin: 15px;
 }
 .chatInputBox {
   flex: 1;

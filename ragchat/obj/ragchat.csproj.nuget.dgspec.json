@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj": {}
+    "C:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj": {}
   },
   "projects": {
-    "c:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj": {
+    "C:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj",
+        "projectUniqueName": "C:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj",
         "projectName": "ragchat",
-        "projectPath": "c:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj",
+        "projectPath": "C:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\ragchat.csproj",
         "packagesPath": "C:\\Users\\yamaz\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\obj\\",
+        "outputPath": "C:\\Users\\yamaz\\Documents\\ragchat\\ragchat\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\yamaz\\AppData\\Roaming\\NuGet\\NuGet.Config"
