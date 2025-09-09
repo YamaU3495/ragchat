@@ -293,4 +293,34 @@ public class ApiSessionService : ISessionService
             return new List<SessionTitle>();
         }
     }
+
+    public async Task DeleteSessionTitleAsync(string sessionId)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("User ID not available, cannot delete session title");
+                return;
+            }
+
+            _logger.LogInformation("Deleting session title for user: {UserId}, session: {SessionId}", userId, sessionId);
+            var response = await _httpClient.DeleteAsync($"/api/chat/sessions/titles/{userId}/{sessionId}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Successfully deleted session title for user: {UserId}, session: {SessionId}", userId, sessionId);
+            }
+            else
+            {
+                _logger.LogWarning("Session title deletion API call failed with status: {StatusCode}", response.StatusCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "セッションタイトル削除エラー: {Message}", ex.Message);
+            throw new InvalidOperationException($"セッションタイトル削除エラー: {ex.Message}", ex);
+        }
+    }
 } 

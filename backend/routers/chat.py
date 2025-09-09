@@ -245,4 +245,23 @@ async def get_user_session_titles(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
+        )
+
+@router.delete("/chat/sessions/titles/{user_id}/{session_id}")
+async def delete_session_title(
+    user_id: str,
+    session_id: str,
+    chat_manager: ChatManager = Depends(get_chat_manager)
+):
+    """
+    指定したsession_idのセッションタイトルを削除する
+    """
+    try:
+        await chat_manager.chat_repository.delete_session_title(user_id, session_id)
+        return {"message": f"Session title for user_id={user_id}, session_id={session_id} deleted", "user_id": user_id, "session_id": session_id}
+    except Exception as e:
+        logger.error(f"Error in delete_session_title endpoint for user_id={user_id}, session_id={session_id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
         ) 

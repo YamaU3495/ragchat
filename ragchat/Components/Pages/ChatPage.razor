@@ -19,7 +19,7 @@
 <PageTitle>RAG Chat</PageTitle>
 
 
-<NavMenu Sessions="Sessions" SessionTitles="SessionTitles" ActiveSessionId="@activeSessionId" ActiveSessionIdChanged="HandleActiveSessionIdChanged" SessionsChanged="HandleSessionsChanged" MessagesCleared="HandleMessagesCleared" UserId="@currentUserId" />
+<NavMenu Sessions="Sessions" SessionTitles="SessionTitles" ActiveSessionId="@activeSessionId" ActiveSessionIdChanged="HandleActiveSessionIdChanged" SessionsChanged="HandleSessionsChanged" SessionTitlesChanged="HandleSessionTitlesChanged" MessagesCleared="HandleMessagesCleared" UserId="@currentUserId" />
 
 <main>
     <div class="top-row">
@@ -288,6 +288,13 @@
     private async Task HandleSessionsChanged(List<Session> sessions)
     {
         Sessions = sessions;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleSessionTitlesChanged(List<SessionTitle> sessionTitles)
+    {
+        SessionTitles = sessionTitles;
         StateHasChanged();
         await Task.CompletedTask;
     }

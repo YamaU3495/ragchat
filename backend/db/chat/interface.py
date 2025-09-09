@@ -46,4 +46,9 @@ class IChatRepo(ABC):
     @abstractmethod
     async def update_session_title(self, user_id: str, session_id: str, title: str) -> SessionTitle:
         """セッションタイトルを更新する"""
+        pass
+
+    @abstractmethod
+    async def delete_session_title(self, user_id: str, session_id: str) -> None:
+        """セッションタイトルを削除する"""
         pass 

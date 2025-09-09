@@ -74,6 +74,7 @@
     [Parameter] public required List<Session> Sessions { get; set; }
     [Parameter] public List<SessionTitle>? SessionTitles { get; set; }
     [Parameter] public EventCallback<List<Session>> SessionsChanged { get; set; }
+    [Parameter] public EventCallback<List<SessionTitle>> SessionTitlesChanged { get; set; }
     [Parameter] public required string ActiveSessionId { get; set; }
     [Parameter] public EventCallback<string> ActiveSessionIdChanged { get; set; }
     [Parameter] public EventCallback MessagesCleared { get; set; }
@@ -90,15 +91,29 @@
     private async Task HandleDeleteClick(string sessionId)
     {
         Logger.LogInformation("Delete button clicked for session: {SessionId}", sessionId);
+        
+        // SessionTitleの削除処理
+        if (SessionTitles != null)
+        {
+            await SessionService.DeleteSessionTitleAsync(sessionId);
+            SessionTitles.RemoveAll(st => st.SessionId == sessionId);
+            await SessionTitlesChanged.InvokeAsync(SessionTitles);
+        }
+        
+        // 従来のSession削除処理
         if (Sessions != null){
             await SessionService.DeleteSessionAsync(sessionId);
             Sessions.RemoveAll(s => s.Id == sessionId);
             await SessionsChanged.InvokeAsync(Sessions);
         }
+        
+        // メッセージの削除処理
         if (!string.IsNullOrEmpty(UserId))
         {
             await ChatService.DeleteAllMessagesAsync(UserId, sessionId);
         }
+        
+        // アクティブセッションの処理
         if (ActiveSessionId == sessionId){
             Logger.LogInformation("Active session changed to empty");
             await ActiveSessionIdChanged.InvokeAsync(string.Empty);

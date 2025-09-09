@@ -188,4 +188,21 @@ class MongoChatRepo(IChatRepo):
             return session_title
         except Exception as e:
             self.logger.error(f"Error updating session title for user_id={user_id}, session_id={session_id}: {str(e)}", exc_info=True)
+            raise
+
+    async def delete_session_title(self, user_id: str, session_id: str) -> None:
+        """セッションタイトルを削除する"""
+        self.logger.info(f"Deleting session title for user {user_id}, session {session_id}")
+        try:
+            result = self.session_titles_collection.delete_one({
+                "user_id": user_id,
+                "session_id": session_id
+            })
+            
+            if result.deleted_count == 0:
+                self.logger.warning(f"No session title found to delete for user_id={user_id}, session_id={session_id}")
+            else:
+                self.logger.info(f"Deleted session title for user_id={user_id}, session_id={session_id}")
+        except Exception as e:
+            self.logger.error(f"Error deleting session title for user_id={user_id}, session_id={session_id}: {str(e)}", exc_info=True)
             raise 

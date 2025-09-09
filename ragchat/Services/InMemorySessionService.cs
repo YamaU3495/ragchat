@@ -57,4 +57,10 @@ public class InMemorySessionService : ISessionService
         // 空のリストを返す
         return Task.FromResult(new List<SessionTitle>());
     }
+
+    public Task DeleteSessionTitleAsync(string sessionId)
+    {
+        throw new NotImplementedException();
+    }
+
 } 

@@ -217,4 +217,9 @@ public class CookieSessionService : ISessionService
             return new List<SessionTitle>();
         }
     }
+
+    public Task DeleteSessionTitleAsync(string sessionId)
+    {
+        throw new NotImplementedException();
+    }
 } 
